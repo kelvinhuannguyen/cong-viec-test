@@ -7,6 +7,7 @@ import { useTasks } from '../../hooks/useTasks';
 import { useNewTaskShortcut } from '../../lib/keyboard';
 import { PREF_KEYS, usePref } from '../../lib/prefs';
 import { useNow } from '../../lib/useNow';
+import { ReminderBanner } from '../../notifications/ReminderBanner';
 import { EmptyState } from './EmptyState';
 import { KanbanBoard } from './KanbanBoard';
 import { QuickAdd } from './QuickAdd';
@@ -68,6 +69,7 @@ export function TasksPage() {
           + Thêm
         </button>
       </header>
+      <ReminderBanner tasks={tasks} now={now} />
 
       <StatusFilterBar value={status} counts={counts} onChange={setStatus} />
 

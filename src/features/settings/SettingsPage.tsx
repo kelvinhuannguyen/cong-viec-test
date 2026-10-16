@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react';
 import { card } from '../../components/ui/styles';
 import { BackupSection } from './BackupSection';
 import { LabelManager } from './LabelManager';
+import { ReminderSection } from './ReminderSection';
 import { StorageStatus } from './StorageStatus';
 import { ThemeSection } from './ThemeSection';
 
@@ -23,6 +24,9 @@ export function SettingsPage() {
       <h1 className="text-2xl font-bold">Cài đặt</h1>
       <Section title="Nhãn">
         <LabelManager />
+      </Section>
+      <Section title="Nhắc hạn chót">
+        <ReminderSection />
       </Section>
       <Section title="Giao diện">
         <ThemeSection />

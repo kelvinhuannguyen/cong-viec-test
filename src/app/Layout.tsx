@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router';
 import { TaskDialogHost } from '../features/tasks/TaskDialogHost';
 import { useThemeEffect } from '../lib/theme';
+import { ReminderRunner } from '../notifications/ReminderRunner';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Công việc', icon: '☑️', end: true },
@@ -57,6 +58,7 @@ export function Layout() {
         <NavItems variant="bottom" />
       </nav>
       <TaskDialogHost />
+      <ReminderRunner />
     </div>
   );
 }
