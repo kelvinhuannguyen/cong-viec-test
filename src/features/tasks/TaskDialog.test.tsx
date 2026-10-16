@@ -1,8 +1,39 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router';
 import { describe, expect, it } from 'vitest';
+import { AppProviders } from '../../app/AppProviders';
+import { AppRoutes } from '../../app/AppRoutes';
+import { createQueryClient } from '../../app/queryClient';
 import { toDueAt } from '../../domain/rules';
-import { createTestRepositories, renderApp } from '../../test/render';
+import { createTestRepositories, LocationProbe, renderApp } from '../../test/render';
+import { useTaskDialogParam } from './useTaskDialogParam';
+
+function BrowserBack() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" data-testid="browser-back" onClick={() => navigate(-1)}>
+      Back
+    </button>
+  );
+}
+
+/** Như renderApp nhưng có nhiều mục lịch sử và một nút giả lập Back của trình duyệt. */
+function renderWithHistory(entries: string[]) {
+  render(
+    <AppProviders repositories={createTestRepositories()} queryClient={createQueryClient()}>
+      <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1}>
+        <AppRoutes />
+        <LocationProbe />
+        <BrowserBack />
+      </MemoryRouter>
+    </AppProviders>,
+  );
+  return { back: () => fireEvent.click(screen.getByTestId('browser-back')) };
+}
+
+const location = () => screen.getByTestId('location');
 
 describe('tạo / sửa công việc', () => {
   it('thêm nhanh bằng Enter', async () => {
@@ -63,5 +94,61 @@ describe('tạo / sửa công việc', () => {
     await user.click(await screen.findByRole('button', { name: '+ Thêm' }));
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('hộp thoại và lịch sử trình duyệt', () => {
+  it('Back đóng hộp thoại vừa mở thay vì rời trang', async () => {
+    const user = userEvent.setup();
+    const { back } = renderWithHistory(['/']);
+    await user.click(await screen.findByRole('button', { name: '+ Thêm' }));
+    expect(location()).toHaveTextContent('/?task=new');
+    back();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(location()).toHaveTextContent(/^\/$/);
+  });
+
+  it('đóng bằng Esc thì lùi lại, không để lại mục lịch sử thừa', async () => {
+    const user = userEvent.setup();
+    const { back } = renderWithHistory(['/bao-cao', '/']);
+    await user.click(await screen.findByRole('button', { name: '+ Thêm' }));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(location()).toHaveTextContent(/^\/$/);
+    back();
+    expect(location()).toHaveTextContent(/^\/bao-cao$/);
+  });
+
+  it('đóng hai lần liền chỉ lùi một bước', () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MemoryRouter
+        initialEntries={['/bao-cao', '/', { pathname: '/', search: '?task=new', state: { taskDialog: true } }]}
+        initialIndex={2}
+      >
+        {children}
+      </MemoryRouter>
+    );
+    const { result } = renderHook(() => ({ dialog: useTaskDialogParam(), location: useLocation() }), { wrapper });
+    act(() => {
+      result.current.dialog.close();
+      result.current.dialog.close();
+    });
+    expect(result.current.location.pathname + result.current.location.search).toBe('/');
+    expect(result.current.dialog.dialogTaskId).toBeNull();
+  });
+
+  it('mở việc khác khi đang mở thì chỉ thay URL, đóng vẫn lùi về trước hộp thoại', () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MemoryRouter initialEntries={['/bao-cao', '/']} initialIndex={1}>
+        {children}
+      </MemoryRouter>
+    );
+    const { result } = renderHook(() => ({ dialog: useTaskDialogParam(), location: useLocation() }), { wrapper });
+    const url = () => result.current.location.pathname + result.current.location.search;
+    act(() => result.current.dialog.openNew());
+    act(() => result.current.dialog.openTask('t1'));
+    expect(url()).toBe('/?task=t1');
+    act(() => result.current.dialog.close());
+    expect(url()).toBe('/');
   });
 });
