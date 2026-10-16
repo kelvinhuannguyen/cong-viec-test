@@ -2,7 +2,11 @@ import '@testing-library/jest-dom/vitest';
 import 'fake-indexeddb/auto';
 import { randomUUID } from 'node:crypto';
 import { cleanup } from '@testing-library/react';
+import { MotionGlobalConfig } from 'motion/react';
 import { afterEach, vi } from 'vitest';
+
+// Bỏ thời gian chuyển động trong test để phần tử thoát/hiện ngay lập tức.
+MotionGlobalConfig.skipAnimations = true;
 
 if (typeof globalThis.crypto.randomUUID !== 'function') {
   Object.defineProperty(globalThis.crypto, 'randomUUID', { value: randomUUID });

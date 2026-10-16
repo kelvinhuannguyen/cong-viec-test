@@ -12,6 +12,19 @@ export const LABEL_COLOR_CLASSES: Record<LabelColor, string> = {
   pink: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
 };
 
+/** Chấm màu đặc, đủ đậm để nhìn rõ ở cả chế độ sáng lẫn tối. */
+export const LABEL_DOT_CLASSES: Record<LabelColor, string> = {
+  slate: 'bg-slate-400',
+  red: 'bg-red-500',
+  orange: 'bg-orange-500',
+  amber: 'bg-amber-500',
+  green: 'bg-green-500',
+  teal: 'bg-teal-500',
+  blue: 'bg-blue-500',
+  violet: 'bg-violet-500',
+  pink: 'bg-pink-500',
+};
+
 export const LABEL_COLOR_NAMES: Record<LabelColor, string> = {
   slate: 'Xám',
   red: 'Đỏ',

@@ -1,3 +1,4 @@
+import { CheckCircleIcon, ClockCounterClockwiseIcon, DownloadSimpleIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { useState, type ChangeEvent } from 'react';
 import { useToast } from '../../components/ui/Toast';
 import { btn } from '../../components/ui/styles';
@@ -79,18 +80,41 @@ export function BackupSection() {
   const stale = !lastBackupAt || Date.now() - Date.parse(lastBackupAt) > BACKUP_REMINDER_MS;
 
   return (
-    <div className="space-y-3 text-sm">
-      <p>{lastBackupAt ? `Lần sao lưu gần nhất: ${formatDateTime(lastBackupAt)}` : 'Chưa sao lưu lần nào.'}</p>
-      {stale && (
-        <p className="text-amber-700 dark:text-amber-400">
-          Nên xuất file sao lưu ít nhất mỗi tuần — dữ liệu chỉ nằm trong trình duyệt này.
-        </p>
-      )}
+    <div className="space-y-4 text-sm">
+      <div
+        className={`flex items-start gap-3 rounded-2xl border px-4 py-3 ${
+          stale
+            ? 'border-amber-200/70 bg-amber-50/60 dark:border-amber-500/15 dark:bg-amber-500/[0.06]'
+            : 'border-zinc-200/70 bg-white dark:border-zinc-800/70 dark:bg-zinc-900/40'
+        }`}
+      >
+        {stale ? (
+          <ClockCounterClockwiseIcon className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+        ) : (
+          <CheckCircleIcon weight="fill" className="mt-0.5 size-4 shrink-0 text-brand-500" aria-hidden="true" />
+        )}
+        <div>
+          <p className="font-medium text-zinc-800 dark:text-zinc-200">
+            {lastBackupAt ? `Lần sao lưu gần nhất: ${formatDateTime(lastBackupAt)}` : 'Chưa sao lưu lần nào.'}
+          </p>
+          {stale && (
+            <p className="mt-0.5 text-amber-700 dark:text-amber-400">
+              Nên xuất file sao lưu ít nhất mỗi tuần — dữ liệu chỉ nằm trong trình duyệt này.
+            </p>
+          )}
+        </div>
+      </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={btn.secondary} onClick={handleExport} disabled={!ready}>
+        <button type="button" className={btn.primary} onClick={handleExport} disabled={!ready}>
+          <DownloadSimpleIcon weight="bold" className="size-4" aria-hidden="true" />
           Xuất dữ liệu
         </button>
-        <label className={`${btn.secondary} ${ready ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+        <label
+          className={`${btn.secondary} has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand-500/20 ${
+            ready ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+          }`}
+        >
+          <UploadSimpleIcon weight="bold" className="size-4" aria-hidden="true" />
           Nhập dữ liệu
           <input
             type="file"
@@ -102,12 +126,12 @@ export function BackupSection() {
         </label>
       </div>
       {loadFailed && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-rose-600 dark:text-rose-400">
           {LOAD_ERROR}
         </p>
       )}
       {error && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}

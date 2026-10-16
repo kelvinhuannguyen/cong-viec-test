@@ -1,5 +1,6 @@
-import { useId, useState, type FormEvent } from 'react';
-import { btn, field } from '../../components/ui/styles';
+import { CheckIcon } from '@phosphor-icons/react';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { btn, field, fieldLabel } from '../../components/ui/styles';
 import {
   PRIORITIES,
   PRIORITY_LABELS,
@@ -10,7 +11,36 @@ import {
   type TaskInput,
   type TaskStatus,
 } from '../../domain/task';
+import { LABEL_DOT_CLASSES } from '../../lib/labelColors';
 import { validateTaskForm, type FormErrors, type TaskFormValues } from './taskFormModel';
+
+function Field({
+  id,
+  label,
+  error,
+  errorId,
+  children,
+}: {
+  id: string;
+  label: string;
+  error?: string;
+  errorId?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className={fieldLabel}>
+        {label}
+      </label>
+      {children}
+      {error && (
+        <p id={errorId} role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function TaskForm({
   initial,
@@ -58,45 +88,35 @@ export function TaskForm({
     }
   }
 
+  const invalid = 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15 dark:border-rose-500/60';
+
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
-      <div>
-        <label htmlFor={`${id}-title`} className="mb-1 block text-sm font-medium">
-          Tên công việc
-        </label>
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+      <Field id={`${id}-title`} label="Tên công việc" error={errors.title} errorId={`${id}-title-error`}>
         <input
           id={`${id}-title`}
-          className={`${field} w-full`}
+          className={`${field} h-11 w-full text-base ${errors.title ? invalid : ''}`}
+          placeholder="Nộp báo cáo thuế quý 3"
           value={values.title}
           onChange={(e) => set('title', e.target.value)}
           aria-invalid={errors.title ? true : undefined}
           aria-describedby={errors.title ? `${id}-title-error` : undefined}
         />
-        {errors.title && (
-          <p id={`${id}-title-error`} role="alert" className="mt-1 text-sm text-red-600">
-            {errors.title}
-          </p>
-        )}
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor={`${id}-desc`} className="mb-1 block text-sm font-medium">
-          Mô tả
-        </label>
+      <Field id={`${id}-desc`} label="Mô tả">
         <textarea
           id={`${id}-desc`}
-          className={`${field} w-full`}
+          className={`${field} h-auto w-full resize-y py-2 leading-relaxed`}
           rows={3}
+          placeholder="Ghi chú thêm, đường dẫn, các bước cần làm..."
           value={values.description}
           onChange={(e) => set('description', e.target.value)}
         />
-      </div>
+      </Field>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor={`${id}-status`} className="mb-1 block text-sm font-medium">
-            Trạng thái
-          </label>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field id={`${id}-status`} label="Trạng thái">
           <select
             id={`${id}-status`}
             className={`${field} w-full`}
@@ -109,11 +129,8 @@ export function TaskForm({
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label htmlFor={`${id}-priority`} className="mb-1 block text-sm font-medium">
-            Ưu tiên
-          </label>
+        </Field>
+        <Field id={`${id}-priority`} label="Ưu tiên">
           <select
             id={`${id}-priority`}
             className={`${field} w-full`}
@@ -126,11 +143,8 @@ export function TaskForm({
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label htmlFor={`${id}-date`} className="mb-1 block text-sm font-medium">
-            Hạn chót
-          </label>
+        </Field>
+        <Field id={`${id}-date`} label="Hạn chót">
           <input
             id={`${id}-date`}
             type="date"
@@ -141,49 +155,57 @@ export function TaskForm({
               if (!e.target.value) set('dueTime', '');
             }}
           />
-        </div>
-        <div>
-          <label htmlFor={`${id}-time`} className="mb-1 block text-sm font-medium">
-            Giờ (tuỳ chọn)
-          </label>
+        </Field>
+        <Field id={`${id}-time`} label="Giờ (tuỳ chọn)" error={errors.dueTime}>
           <input
             id={`${id}-time`}
             type="time"
-            className={`${field} w-full`}
+            className={`${field} w-full ${errors.dueTime ? invalid : ''}`}
             value={values.dueTime}
             disabled={!values.dueDate}
             onChange={(e) => set('dueTime', e.target.value)}
             aria-invalid={errors.dueTime ? true : undefined}
           />
-          {errors.dueTime && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {errors.dueTime}
-            </p>
-          )}
-        </div>
+        </Field>
       </div>
 
-      <fieldset>
-        <legend className="mb-1 text-sm font-medium">Nhãn</legend>
+      <fieldset className="flex flex-col gap-2">
+        <legend className={`${fieldLabel} mb-2`}>Nhãn</legend>
         {labels.length === 0 ? (
-          <p className="text-sm text-slate-500">Chưa có nhãn — tạo trong Cài đặt.</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Chưa có nhãn nào. Bạn có thể tạo nhãn trong Cài đặt.</p>
         ) : (
-          <div className="flex flex-wrap gap-3">
-            {labels.map((label) => (
-              <label key={label.id} className="flex items-center gap-1 text-sm">
-                <input
-                  type="checkbox"
-                  checked={values.labelIds.includes(label.id)}
-                  onChange={() => toggleLabel(label.id)}
-                />
-                {label.name}
-              </label>
-            ))}
+          <div className="flex flex-wrap gap-2">
+            {labels.map((label) => {
+              const checked = values.labelIds.includes(label.id);
+              return (
+                <label
+                  key={label.id}
+                  className={`relative flex cursor-pointer items-center gap-2 rounded-full border py-1 pl-2.5 pr-3 text-sm transition-colors has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand-500/20 ${
+                    checked
+                      ? 'border-brand-500 bg-brand-50 text-brand-800 dark:border-brand-500/70 dark:bg-brand-500/10 dark:text-brand-200'
+                      : 'border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    checked={checked}
+                    onChange={() => toggleLabel(label.id)}
+                  />
+                  {checked ? (
+                    <CheckIcon weight="bold" className="size-3 text-brand-600 dark:text-brand-400" aria-hidden="true" />
+                  ) : (
+                    <span className={`size-2 rounded-full ${LABEL_DOT_CLASSES[label.color]}`} aria-hidden="true" />
+                  )}
+                  {label.name}
+                </label>
+              );
+            })}
           </div>
         )}
       </fieldset>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="-mx-6 -mb-6 mt-1 flex justify-end gap-2 border-t border-zinc-100 bg-zinc-50/60 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
         <button type="button" className={btn.secondary} onClick={onCancel}>
           Huỷ
         </button>

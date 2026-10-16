@@ -1,21 +1,32 @@
+import { CaretDownIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState, type FormEvent } from 'react';
 import { useToast } from '../../components/ui/Toast';
-import { btn, field } from '../../components/ui/styles';
+import { btn, field, spring } from '../../components/ui/styles';
 import { LABEL_COLORS, type Label, type LabelColor } from '../../domain/task';
 import { useCreateLabel, useDeleteLabel, useLabels, useUpdateLabel } from '../../hooks/useLabels';
 import { useTasks } from '../../hooks/useTasks';
 import { errorMessage } from '../../lib/errors';
-import { LABEL_COLOR_CLASSES, LABEL_COLOR_NAMES } from '../../lib/labelColors';
+import { LABEL_COLOR_NAMES, LABEL_DOT_CLASSES } from '../../lib/labelColors';
 
 function ColorSelect({ label, value, onChange }: { label: string; value: LabelColor; onChange: (c: LabelColor) => void }) {
   return (
-    <select aria-label={label} className={`${field} w-auto`} value={value} onChange={(e) => onChange(e.target.value as LabelColor)}>
-      {LABEL_COLORS.map((c) => (
-        <option key={c} value={c}>
-          {LABEL_COLOR_NAMES[c]}
-        </option>
-      ))}
-    </select>
+    <span className="relative inline-flex shrink-0 items-center">
+      <span className={`pointer-events-none absolute left-3 size-2.5 rounded-full ${LABEL_DOT_CLASSES[value]}`} aria-hidden="true" />
+      <select
+        aria-label={label}
+        className={`${field} w-auto cursor-pointer appearance-none pl-7 pr-8`}
+        value={value}
+        onChange={(e) => onChange(e.target.value as LabelColor)}
+      >
+        {LABEL_COLORS.map((c) => (
+          <option key={c} value={c}>
+            {LABEL_COLOR_NAMES[c]}
+          </option>
+        ))}
+      </select>
+      <CaretDownIcon className="pointer-events-none absolute right-2.5 size-3 text-zinc-400" aria-hidden="true" />
+    </span>
   );
 }
 
@@ -73,36 +84,54 @@ export function LabelManager() {
   return (
     <div className="space-y-4">
       {labels.length === 0 ? (
-        <p className="text-sm text-slate-500">Chưa có nhãn nào.</p>
+        <p className="rounded-2xl border border-dashed border-zinc-300 px-4 py-5 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+          Chưa có nhãn nào. Tạo nhãn đầu tiên ở ô bên dưới.
+        </p>
       ) : (
-        <ul className="space-y-2">
-          {labels.map((label) => (
-            <li key={label.id} className="flex flex-wrap items-center gap-2">
-              <span className={`size-3 shrink-0 rounded-full ${LABEL_COLOR_CLASSES[label.color]}`} aria-hidden="true" />
-              <input
-                key={`${label.id}:${label.name}`}
-                aria-label={`Tên nhãn ${label.name}`}
-                className={`${field} w-44`}
-                defaultValue={label.name}
-                onBlur={(e) => rename(label, e.currentTarget)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-              />
-              <ColorSelect label={`Màu nhãn ${label.name}`} value={label.color} onChange={(c) => recolor(label, c)} />
-              <span className="text-xs text-slate-500">{usage.get(label.id) ?? 0} việc</span>
-              <button type="button" className={btn.danger} aria-label={`Xoá nhãn ${label.name}`} onClick={() => remove(label)}>
-                Xoá
-              </button>
-            </li>
-          ))}
+        <ul className="divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white dark:divide-zinc-800/70 dark:border-zinc-800/70 dark:bg-zinc-900/40">
+          <AnimatePresence initial={false}>
+            {labels.map((label) => (
+              <motion.li
+                key={label.id}
+                layout="position"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={spring}
+                className="group flex flex-wrap items-center gap-2 px-3 py-2.5"
+              >
+                <input
+                  key={`${label.id}:${label.name}`}
+                  aria-label={`Tên nhãn ${label.name}`}
+                  className={`${field} min-w-0 flex-1 border-transparent bg-transparent shadow-none hover:border-zinc-200 dark:border-transparent dark:bg-transparent dark:hover:border-zinc-700`}
+                  defaultValue={label.name}
+                  onBlur={(e) => rename(label, e.currentTarget)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                />
+                <span className="font-mono text-xs tabular-nums text-zinc-400 dark:text-zinc-500">
+                  {usage.get(label.id) ?? 0} việc
+                </span>
+                <ColorSelect label={`Màu nhãn ${label.name}`} value={label.color} onChange={(c) => recolor(label, c)} />
+                <button
+                  type="button"
+                  className={`${btn.icon} hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400`}
+                  aria-label={`Xoá nhãn ${label.name}`}
+                  onClick={() => remove(label)}
+                >
+                  <TrashIcon className="size-4" aria-hidden="true" />
+                </button>
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
       <form onSubmit={handleAdd} className="flex flex-wrap items-center gap-2">
         <input
           aria-label="Tên nhãn mới"
           placeholder="Tên nhãn mới"
-          className={`${field} w-44`}
+          className={`${field} min-w-40 flex-1`}
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -111,11 +140,12 @@ export function LabelManager() {
         />
         <ColorSelect label="Màu nhãn mới" value={color} onChange={setColor} />
         <button type="submit" className={btn.secondary}>
+          <PlusIcon weight="bold" className="size-4" aria-hidden="true" />
           Thêm nhãn
         </button>
       </form>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}

@@ -16,6 +16,7 @@ import { useId } from 'react';
 import { computeDrop, sortByPosition } from '../../domain/kanban';
 import { STATUS_LABELS, type Label, type Task, type TaskStatus } from '../../domain/task';
 import { useUpdateTasks } from '../../hooks/useTasks';
+import { STATUS_DOT } from '../../lib/statusStyles';
 import { DueBadge, LabelChips, PriorityBadge } from './badges';
 import { useTaskDialogParam } from './useTaskDialogParam';
 
@@ -38,14 +39,17 @@ function KanbanCard({ task, labelsById, now }: CardProps) {
     id: task.id,
     attributes: { roleDescription: 'thẻ có thể kéo' },
   });
+  const done = task.status === 'done';
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       {...attributes}
       {...listeners}
-      className={`cursor-grab rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800 ${
-        isDragging ? 'opacity-60' : ''
+      className={`group cursor-grab rounded-xl border bg-white p-3.5 transition-[box-shadow,border-color] duration-200 active:cursor-grabbing dark:bg-zinc-900 ${
+        isDragging
+          ? 'z-10 border-brand-400 shadow-[0_20px_40px_-12px_rgb(9_9_11/0.3)] dark:border-brand-500'
+          : 'border-zinc-200/80 shadow-[0_1px_2px_rgb(9_9_11/0.04)] hover:border-zinc-300 hover:shadow-[0_8px_24px_-12px_rgb(9_9_11/0.18)] dark:border-zinc-800 dark:hover:border-zinc-700'
       }`}
     >
       <button
@@ -55,14 +59,16 @@ function KanbanCard({ task, labelsById, now }: CardProps) {
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
         }}
-        className="text-left font-medium hover:underline"
+        className={`text-left text-sm font-medium leading-snug tracking-tight ${
+          done ? 'text-zinc-400 line-through dark:text-zinc-500' : 'text-zinc-900 hover:text-brand-700 dark:text-zinc-100 dark:hover:text-brand-300'
+        }`}
       >
         {task.title}
       </button>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-        <LabelChips labelIds={task.labelIds} labelsById={labelsById} />
-        <PriorityBadge priority={task.priority} />
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
         <DueBadge task={task} now={now} />
+        <PriorityBadge priority={task.priority} />
+        <LabelChips labelIds={task.labelIds} labelsById={labelsById} />
       </div>
     </li>
   );
@@ -84,21 +90,40 @@ function KanbanColumn({
   return (
     <section
       aria-labelledby={headingId}
-      className={`rounded-2xl bg-slate-100 p-3 dark:bg-slate-900 ${isOver ? 'ring-2 ring-blue-400' : ''}`}
+      className={`rounded-2xl border p-2 transition-colors duration-200 ${
+        isOver
+          ? 'border-brand-300 bg-brand-50/60 dark:border-brand-700 dark:bg-brand-950/30'
+          : 'border-transparent bg-zinc-100/70 dark:bg-zinc-900/50'
+      }`}
     >
-      <header className="mb-3 flex items-center justify-between">
-        <h2 id={headingId} className="font-semibold">
+      <header className="flex items-center gap-2 px-2 pb-3 pt-1.5">
+        <span
+          className={`size-2 rounded-full ${STATUS_DOT[status]} ${status === 'in_progress' ? 'animate-breathe' : ''}`}
+          aria-hidden="true"
+        />
+        <h2 id={headingId} className="text-sm font-semibold tracking-tight">
           {STATUS_LABELS[status]}
         </h2>
-        <span className="text-sm text-slate-500" aria-label={`${tasks.length} việc`}>
+        <span
+          className="ml-auto rounded-full bg-white px-2 py-0.5 font-mono text-xs tabular-nums text-zinc-500 shadow-[0_0_0_1px_rgb(9_9_11/0.05)] dark:bg-zinc-800 dark:text-zinc-400"
+          aria-label={`${tasks.length} việc`}
+        >
           {tasks.length}
         </span>
       </header>
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <ul ref={setNodeRef} className="min-h-24 space-y-2">
+        <ul ref={setNodeRef} className="flex min-h-32 flex-col gap-2">
           {tasks.map((task) => (
             <KanbanCard key={task.id} task={task} labelsById={labelsById} now={now} />
           ))}
+          {tasks.length === 0 && (
+            <li
+              aria-hidden="true"
+              className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-zinc-300/80 py-8 text-xs text-zinc-400 dark:border-zinc-700 dark:text-zinc-500"
+            >
+              Thả thẻ vào đây
+            </li>
+          )}
         </ul>
       </SortableContext>
     </section>
@@ -166,7 +191,7 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
       accessibility={{ screenReaderInstructions: SCREEN_READER_INSTRUCTIONS, announcements }}
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {statuses.map((status) => (
           <KanbanColumn
             key={status}

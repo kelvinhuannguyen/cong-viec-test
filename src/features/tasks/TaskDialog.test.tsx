@@ -19,7 +19,7 @@ describe('tạo / sửa công việc', () => {
     const user = userEvent.setup();
     const repos = createTestRepositories();
     renderApp(repos);
-    await user.click(await screen.findByRole('button', { name: '+ Thêm' }));
+    await user.click(await screen.findByRole('button', { name: 'Thêm việc' }));
     const dialog = screen.getByRole('dialog', { name: 'Thêm công việc' });
 
     await user.click(within(dialog).getByRole('button', { name: 'Thêm' }));
@@ -60,7 +60,7 @@ describe('tạo / sửa công việc', () => {
   it('Escape đóng hộp thoại', async () => {
     const user = userEvent.setup();
     renderApp(createTestRepositories());
-    await user.click(await screen.findByRole('button', { name: '+ Thêm' }));
+    await user.click(await screen.findByRole('button', { name: 'Thêm việc' }));
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });

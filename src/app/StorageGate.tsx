@@ -28,13 +28,18 @@ export function StorageGate({
   }, [probe, createRepositories]);
 
   if (state.kind === 'checking') {
-    return <p className="p-8 text-center text-slate-500">Đang mở dữ liệu…</p>;
+    return (
+      <p role="status" className="flex min-h-dvh items-center justify-center gap-2 text-sm text-zinc-500">
+        <span className="size-1.5 animate-breathe rounded-full bg-brand-500" aria-hidden="true" />
+        Đang mở dữ liệu…
+      </p>
+    );
   }
   if (state.kind === 'unavailable') {
     return (
-      <div role="alert" className="mx-auto mt-24 max-w-md space-y-3 p-6 text-center">
-        <h1 className="text-xl font-bold">Không thể lưu dữ liệu</h1>
-        <p className="text-slate-600 dark:text-slate-300">
+      <div role="alert" className="mx-auto mt-24 max-w-md space-y-3 px-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Không thể lưu dữ liệu</h1>
+        <p className="leading-relaxed text-zinc-600 dark:text-zinc-300">
           Trình duyệt này đang chặn bộ nhớ IndexedDB, thường do chế độ ẩn danh hoặc cài đặt quyền riêng tư.
           Hãy mở ứng dụng trong cửa sổ thường hoặc một trình duyệt khác.
         </p>

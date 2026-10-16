@@ -2,12 +2,97 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, monospace;
+
+  /* Xanh ngọc đã giảm độ bão hoà để hợp với nền zinc. */
+  --color-brand-50: oklch(0.975 0.02 166);
+  --color-brand-100: oklch(0.945 0.045 166);
+  --color-brand-200: oklch(0.89 0.08 166);
+  --color-brand-300: oklch(0.82 0.11 166);
+  --color-brand-400: oklch(0.75 0.13 165);
+  --color-brand-500: oklch(0.68 0.13 164);
+  --color-brand-600: oklch(0.58 0.115 164);
+  --color-brand-700: oklch(0.49 0.095 165);
+  --color-brand-800: oklch(0.41 0.075 166);
+  --color-brand-900: oklch(0.35 0.06 167);
+  --color-brand-950: oklch(0.24 0.045 168);
+
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-rise: rise 0.55s var(--ease-spring) both;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-breathe: breathe 2.6s ease-in-out infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scale(0.8);
+    }
+  }
+}
+
 :root {
   color-scheme: light;
 }
 :root.dark {
   color-scheme: dark;
 }
+
 body {
-  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  @apply bg-brand-200 text-brand-950 dark:bg-brand-800 dark:text-brand-50;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
