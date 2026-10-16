@@ -2,18 +2,13 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { createBackup } from '../../data/backup';
-import type { Repositories, TaskRepository } from '../../data/repository';
-import { createTestRepositories, renderApp } from '../../test/render';
+import type { Repositories } from '../../data/repository';
+import { createTestRepositories, renderApp, withTasks } from '../../test/render';
 
 function withTasksNeverLoading(repos: Repositories, mode: 'pending' | 'error'): Repositories {
-  const tasks: TaskRepository = {
+  return withTasks(repos, {
     list: () => (mode === 'pending' ? new Promise(() => {}) : Promise.reject(new Error('boom'))),
-    create: (input) => repos.tasks.create(input),
-    update: (id, patch) => repos.tasks.update(id, patch),
-    remove: (id) => repos.tasks.remove(id),
-    restore: (task) => repos.tasks.restore(task),
-  };
-  return { ...repos, tasks };
+  });
 }
 
 describe('trang Cài đặt', () => {
@@ -28,6 +23,25 @@ describe('trang Cài đặt', () => {
     expect(await screen.findByText('Không đọc được dữ liệu. Hãy tải lại trang.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xuất dữ liệu' })).toBeDisabled();
     expect(screen.getByLabelText('Nhập dữ liệu')).toBeDisabled();
+  });
+
+  it('đọc lại ngầm bị lỗi thì vẫn dùng dữ liệu đã tải, không báo lỗi', async () => {
+    const user = userEvent.setup();
+    const base = createTestRepositories();
+    const label = await base.labels.create({ name: 'Cá nhân', color: 'pink' });
+    await base.tasks.create({ title: 'T', labelIds: [label.id] });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    let calls = 0;
+    const repos = withTasks(base, {
+      list: () => (++calls === 1 ? base.tasks.list() : Promise.reject(new Error('boom'))),
+    });
+    renderApp(repos, '/cai-dat');
+    expect(await screen.findByText('1 việc')).toBeInTheDocument();
+    // Xoá nhãn làm danh sách việc được đọc lại, lần đọc này lỗi.
+    await user.click(screen.getByRole('button', { name: 'Xoá nhãn Cá nhân' }));
+    await waitFor(() => expect(calls).toBe(2));
+    expect(screen.queryByText('Không đọc được dữ liệu. Hãy tải lại trang.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Xuất dữ liệu' })).toBeEnabled();
   });
 
   it('thêm nhãn; trùng tên thì báo lỗi', async () => {

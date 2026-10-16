@@ -26,8 +26,10 @@ export function BackupSection() {
   const labelsQuery = useLabels();
   const tasks = tasksQuery.data ?? [];
   const labels = labelsQuery.data ?? [];
-  const ready = tasksQuery.isSuccess && labelsQuery.isSuccess;
-  const loadFailed = tasksQuery.isError || labelsQuery.isError;
+  // Đọc lại ngầm bị lỗi nhưng vẫn còn dữ liệu đã tải thì vẫn dùng được, không báo lỗi.
+  const ready = tasksQuery.data !== undefined && labelsQuery.data !== undefined;
+  const loadFailed =
+    (tasksQuery.isError && tasksQuery.data === undefined) || (labelsQuery.isError && labelsQuery.data === undefined);
   const importData = useImportData();
   const toast = useToast();
   const [lastBackupAt, setLastBackupAt] = usePref<string | null>(PREF_KEYS.lastBackupAt, null);

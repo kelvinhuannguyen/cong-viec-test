@@ -9,7 +9,7 @@ export function App() {
     <ErrorBoundary>
       <StorageGate>
         {(repositories) => (
-          <AppProviders repositories={repositories}>
+          <AppProviders repositories={repositories} syncTabs>
             <BrowserRouter>
               <AppRoutes />
             </BrowserRouter>

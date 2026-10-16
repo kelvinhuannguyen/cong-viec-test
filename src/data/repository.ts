@@ -1,9 +1,11 @@
-import type { Label, LabelPatch, NewLabel, NewTask, Task, TaskPatch } from '../domain/task';
+import type { Label, LabelPatch, NewLabel, NewTask, Task, TaskPatch, TaskUpdate } from '../domain/task';
 
 export interface TaskRepository {
   list(): Promise<Task[]>;
   create(input: NewTask): Promise<Task>;
   update(id: string, patch: TaskPatch): Promise<Task>;
+  /** Cập nhật nhiều việc trong một giao dịch: một việc lỗi thì không việc nào được lưu. */
+  updateMany(updates: TaskUpdate[]): Promise<Task[]>;
   remove(id: string): Promise<void>;
   /** Ghi lại nguyên vẹn một việc đã xoá (phục vụ "Hoàn tác"). */
   restore(task: Task): Promise<void>;

@@ -90,6 +90,57 @@ export function describeRepositoryContract(
         await repos.tasks.restore(task);
         expect(await repos.tasks.list()).toEqual([task]);
       });
+
+      it('updateMany lưu mọi thay đổi và trả về việc đã lưu theo thứ tự', async () => {
+        const a = await repos.tasks.create({ title: 'A' });
+        const b = await repos.tasks.create({ title: 'B' });
+        tick(5);
+        const saved = await repos.tasks.updateMany([
+          { id: b.id, patch: { status: 'done', position: 10 } },
+          { id: a.id, patch: { position: 20 } },
+        ]);
+        expect(saved.map((t) => [t.id, t.status, t.position])).toEqual([
+          [b.id, 'done', 10],
+          [a.id, 'todo', 20],
+        ]);
+        expect(saved[0].completedAt).toBe(clock.toISOString());
+        const byId = new Map((await repos.tasks.list()).map((t) => [t.id, t]));
+        expect(byId.get(a.id)).toEqual(saved[1]);
+        expect(byId.get(b.id)).toEqual(saved[0]);
+        expect(await repos.tasks.updateMany([])).toEqual([]);
+      });
+
+      it('updateMany chuyển nhiều việc sang cột mới thì việc sau đứng trên việc trước', async () => {
+        const a = await repos.tasks.create({ title: 'A' });
+        const b = await repos.tasks.create({ title: 'B' });
+        const [movedA, movedB] = await repos.tasks.updateMany([
+          { id: a.id, patch: { status: 'on_hold' } },
+          { id: b.id, patch: { status: 'on_hold' } },
+        ]);
+        expect(movedB.position).toBeLessThan(movedA.position);
+      });
+
+      it('updateMany có một việc lỗi thì không lưu việc nào', async () => {
+        const a = await repos.tasks.create({ title: 'A' });
+        const b = await repos.tasks.create({ title: 'B' });
+        await expect(
+          repos.tasks.updateMany([
+            { id: a.id, patch: { status: 'done' } },
+            { id: 'khong-co', patch: { status: 'done' } },
+          ]),
+        ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+        await expect(
+          repos.tasks.updateMany([
+            { id: a.id, patch: { status: 'done' } },
+            { id: b.id, patch: { title: '  ' } },
+          ]),
+        ).rejects.toMatchObject({ code: 'INVALID_TITLE' });
+        const titles = (await repos.tasks.list()).map((t) => [t.title, t.status]).sort();
+        expect(titles).toEqual([
+          ['A', 'todo'],
+          ['B', 'todo'],
+        ]);
+      });
     });
 
     describe('labels', () => {
