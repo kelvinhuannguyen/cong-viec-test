@@ -6,7 +6,9 @@ import {
   useDroppable,
   useSensor,
   useSensors,
+  type Announcements,
   type DragEndEvent,
+  type ScreenReaderInstructions,
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -19,6 +21,11 @@ import { useTaskDialogParam } from './useTaskDialogParam';
 
 const COLUMN_PREFIX = 'column:';
 
+const SCREEN_READER_INSTRUCTIONS: ScreenReaderInstructions = {
+  draggable:
+    'Để di chuyển thẻ, nhấn Space hoặc Enter để nhấc lên. Dùng phím mũi tên để chuyển, nhấn Space hoặc Enter để thả, nhấn Esc để huỷ.',
+};
+
 interface CardProps {
   task: Task;
   labelsById: Map<string, Label>;
@@ -27,7 +34,10 @@ interface CardProps {
 
 function KanbanCard({ task, labelsById, now }: CardProps) {
   const { openTask } = useTaskDialogParam();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    attributes: { roleDescription: 'thẻ có thể kéo' },
+  });
   return (
     <li
       ref={setNodeRef}
@@ -38,7 +48,15 @@ function KanbanCard({ task, labelsById, now }: CardProps) {
         isDragging ? 'opacity-60' : ''
       }`}
     >
-      <button type="button" onClick={() => openTask(task.id)} className="text-left font-medium hover:underline">
+      <button
+        type="button"
+        onClick={() => openTask(task.id)}
+        // Chặn dnd-kit bắt Enter/Space trên nút để bàn phím vẫn mở được hộp thoại sửa.
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+        }}
+        className="text-left font-medium hover:underline"
+      >
         {task.title}
       </button>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -106,6 +124,22 @@ export function KanbanBoard({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  const titleOf = (id: string | number) => allTasks.find((t) => t.id === String(id))?.title ?? String(id);
+  const targetOf = (id: string | number) => {
+    const key = String(id);
+    return key.startsWith(COLUMN_PREFIX)
+      ? `cột ${STATUS_LABELS[key.slice(COLUMN_PREFIX.length) as TaskStatus]}`
+      : `thẻ ${titleOf(key)}`;
+  };
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => `Đã nhấc thẻ ${titleOf(active.id)}.`,
+    onDragOver: ({ active, over }) =>
+      over ? `Thẻ ${titleOf(active.id)} đang ở trên ${targetOf(over.id)}.` : `Thẻ ${titleOf(active.id)} không ở trên vị trí thả nào.`,
+    onDragEnd: ({ active, over }) =>
+      over ? `Đã thả thẻ ${titleOf(active.id)} vào ${targetOf(over.id)}.` : `Đã thả thẻ ${titleOf(active.id)}.`,
+    onDragCancel: ({ active }) => `Đã huỷ kéo thẻ ${titleOf(active.id)}.`,
+  };
+
   function handleDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
     const overId = String(over.id);
@@ -126,7 +160,12 @@ export function KanbanBoard({
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragEnd={handleDragEnd}
+      accessibility={{ screenReaderInstructions: SCREEN_READER_INSTRUCTIONS, announcements }}
+    >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statuses.map((status) => (
           <KanbanColumn

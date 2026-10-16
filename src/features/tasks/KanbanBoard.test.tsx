@@ -40,4 +40,16 @@ describe('Kanban', () => {
     expect(await screen.findByRole('button', { name: 'Mua sữa' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Viết báo cáo quý' })).not.toBeInTheDocument();
   });
+
+  it('bàn phím: Enter trên tên thẻ mở hộp thoại sửa', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('cvct.view', '"kanban"');
+    const repos = createTestRepositories();
+    await seed(repos);
+    renderApp(repos);
+    const title = await screen.findByRole('button', { name: 'Mua sữa' });
+    title.focus();
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('dialog', { name: 'Sửa công việc' })).toBeInTheDocument();
+  });
 });

@@ -52,7 +52,7 @@ export function TasksPage() {
   }
 
   return (
-    <section className="mx-auto max-w-4xl space-y-4">
+    <section className={`mx-auto space-y-4 ${view === 'kanban' ? 'max-w-6xl' : 'max-w-4xl'}`}>
       <header className="flex flex-wrap items-center gap-3">
         <h1 className="mr-auto text-2xl font-bold">Công việc</h1>
         <input

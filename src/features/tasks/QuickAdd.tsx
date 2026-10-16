@@ -26,7 +26,7 @@ export function QuickAdd() {
       <input
         aria-label="Thêm nhanh công việc"
         placeholder="Thêm nhanh: gõ tên việc rồi nhấn Enter"
-        className={field}
+        className={`${field} w-full`}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />

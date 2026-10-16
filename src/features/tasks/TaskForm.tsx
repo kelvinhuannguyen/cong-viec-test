@@ -66,7 +66,7 @@ export function TaskForm({
         </label>
         <input
           id={`${id}-title`}
-          className={field}
+          className={`${field} w-full`}
           value={values.title}
           onChange={(e) => set('title', e.target.value)}
           aria-invalid={errors.title ? true : undefined}
@@ -85,7 +85,7 @@ export function TaskForm({
         </label>
         <textarea
           id={`${id}-desc`}
-          className={field}
+          className={`${field} w-full`}
           rows={3}
           value={values.description}
           onChange={(e) => set('description', e.target.value)}
@@ -99,7 +99,7 @@ export function TaskForm({
           </label>
           <select
             id={`${id}-status`}
-            className={field}
+            className={`${field} w-full`}
             value={values.status}
             onChange={(e) => set('status', e.target.value as TaskStatus)}
           >
@@ -116,7 +116,7 @@ export function TaskForm({
           </label>
           <select
             id={`${id}-priority`}
-            className={field}
+            className={`${field} w-full`}
             value={values.priority}
             onChange={(e) => set('priority', e.target.value as Priority)}
           >
@@ -134,7 +134,7 @@ export function TaskForm({
           <input
             id={`${id}-date`}
             type="date"
-            className={field}
+            className={`${field} w-full`}
             value={values.dueDate}
             onChange={(e) => {
               set('dueDate', e.target.value);
@@ -149,7 +149,7 @@ export function TaskForm({
           <input
             id={`${id}-time`}
             type="time"
-            className={field}
+            className={`${field} w-full`}
             value={values.dueTime}
             disabled={!values.dueDate}
             onChange={(e) => set('dueTime', e.target.value)}
