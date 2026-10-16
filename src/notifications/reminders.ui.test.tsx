@@ -45,6 +45,13 @@ describe('nhắc hạn chót', () => {
     expect(toggle).not.toBeChecked();
   });
 
+  it('đã bật nhưng quyền bị thu hồi thì Cài đặt vẫn cảnh báo', async () => {
+    stubNotification('denied');
+    localStorage.setItem('cvct.reminders', 'true');
+    renderApp(createTestRepositories(), '/cai-dat');
+    expect(await screen.findByText(/Bạn chưa cho phép thông báo/)).toBeInTheDocument();
+  });
+
   it('đang bật và có quyền thì gửi thông báo khi việc sắp đến hạn', async () => {
     stubNotification('granted');
     localStorage.setItem('cvct.reminders', 'true');

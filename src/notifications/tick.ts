@@ -22,32 +22,37 @@ export function runReminderTick(
   tasks: Task[],
   now: Date,
   store: ReminderStore,
-  notify: (notification: AppNotification) => void,
+  // Trả về true khi thông báo thực sự đã hiện; false thì lần kiểm tra sau sẽ thử lại.
+  notify: (notification: AppNotification) => boolean,
   options: { prune: boolean },
 ): void {
   const today = format(now, 'yyyy-MM-dd');
   if (store.getLastSummaryDate() !== today) {
-    store.setLastSummaryDate(today);
     const summary = dailySummary(tasks, now);
-    if (summary) {
+    const delivered =
+      !summary ||
       notify({
         title: 'Công Việc Của Tôi',
         body: `Hôm nay có ${summary.dueToday} việc đến hạn, ${summary.overdue} việc đang trễ`,
       });
-    }
+    if (delivered) store.setLastSummaryDate(today);
   }
 
   let sent = store.getSent();
   if (options.prune) sent = pruneSentKeys(sent, tasks);
   const sentSet = new Set(sent);
   const reminders = dueReminders(tasks, now, sentSet);
+  let added = false;
   for (const reminder of reminders) {
-    notify({
+    const delivered = notify({
       title: reminder.kind === 'due_soon' ? 'Sắp đến hạn' : 'Đã trễ hạn',
       body: reminder.task.title,
       taskId: reminder.task.id,
     });
-    sentSet.add(reminder.key);
+    if (delivered) {
+      sentSet.add(reminder.key);
+      added = true;
+    }
   }
-  if (options.prune || reminders.length > 0) store.setSent([...sentSet]);
+  if (options.prune || added) store.setSent([...sentSet]);
 }

@@ -19,8 +19,8 @@ export async function requestPermission(): Promise<PermissionState> {
   }
 }
 
-export function showNotification(notification: AppNotification, onOpenTask: (id: string) => void): void {
-  if (getPermission() !== 'granted') return;
+export function showNotification(notification: AppNotification, onOpenTask: (id: string) => void): boolean {
+  if (getPermission() !== 'granted') return false;
   try {
     const n = new Notification(notification.title, {
       body: notification.body,
@@ -32,7 +32,9 @@ export function showNotification(notification: AppNotification, onOpenTask: (id:
       if (notification.taskId) onOpenTask(notification.taskId);
       n.close();
     };
+    return true;
   } catch {
     // Một số trình duyệt di động chỉ cho phép thông báo qua service worker; bỏ qua.
+    return false;
   }
 }
