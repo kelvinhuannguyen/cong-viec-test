@@ -187,5 +187,16 @@ export function describeRepositoryContract(
       expect(titles).toEqual(['Mới', 'Thêm']);
       expect(await repos.labels.list()).toEqual([label]);
     });
+
+    it('importData không tạo nhãn trùng tên, đổi việc nhập vào sang nhãn đã có', async () => {
+      const existing = await repos.labels.create({ name: 'Công việc', color: 'blue' });
+      const incoming = { id: '00000000-0000-4000-8000-000000000003', name: 'CÔNG VIỆC', color: 'red' as const };
+      const task = await repos.tasks.create({ title: 'Mẫu' });
+      const imported = { ...task, id: '00000000-0000-4000-8000-000000000004', labelIds: [incoming.id, existing.id] };
+      await repos.importData({ tasks: [imported], labels: [incoming] });
+      expect(await repos.labels.list()).toEqual([existing]);
+      const saved = (await repos.tasks.list()).find((t) => t.id === imported.id);
+      expect(saved?.labelIds).toEqual([existing.id]);
+    });
   });
 }

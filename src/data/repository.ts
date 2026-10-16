@@ -22,7 +22,10 @@ export interface LabelRepository {
 export interface Repositories {
   tasks: TaskRepository;
   labels: LabelRepository;
-  /** Gộp theo id (trùng thì ghi đè) trong một giao dịch. */
+  /**
+   * Gộp theo id (trùng thì ghi đè) trong một giao dịch. Nhãn trùng tên (không phân biệt hoa thường)
+   * với một nhãn đã có thì dùng nhãn đã có, các việc nhập vào được đổi sang id đó (xem planLabelImport).
+   */
   importData(data: { tasks: Task[]; labels: Label[] }): Promise<void>;
 }
 

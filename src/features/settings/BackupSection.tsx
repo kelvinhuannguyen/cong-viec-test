@@ -67,7 +67,9 @@ export function BackupSection() {
     setError('');
     const p = previewImport(parsed.data, tasks, labels);
     const ok = window.confirm(
-      `Nhập ${p.newTasks} việc mới, ghi đè ${p.overwrittenTasks} việc; ${p.newLabels} nhãn mới, ghi đè ${p.overwrittenLabels} nhãn. Tiếp tục?`,
+      `Nhập ${p.newTasks} việc mới, ghi đè ${p.overwrittenTasks} việc; ${p.newLabels} nhãn mới, ghi đè ${p.overwrittenLabels} nhãn` +
+        (p.mergedLabels ? `, gộp ${p.mergedLabels} nhãn trùng tên với nhãn đã có` : '') +
+        '. Tiếp tục?',
     );
     if (!ok) return;
     try {

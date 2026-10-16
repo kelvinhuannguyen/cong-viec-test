@@ -1,3 +1,4 @@
+import { planLabelImport, remapTaskLabels } from '../../domain/importMerge';
 import type { Repositories } from '../repository';
 import type { AppDatabase } from './db';
 import { DexieLabelRepository } from './DexieLabelRepository';
@@ -9,8 +10,9 @@ export function createDexieRepositories(db: AppDatabase, now: () => Date = () =>
     labels: new DexieLabelRepository(db),
     importData: ({ tasks, labels }) =>
       db.transaction('rw', db.tasks, db.labels, async () => {
-        await db.labels.bulkPut(labels);
-        await db.tasks.bulkPut(tasks);
+        const plan = planLabelImport(labels, await db.labels.toArray());
+        await db.labels.bulkPut(plan.labels);
+        await db.tasks.bulkPut(remapTaskLabels(tasks, plan.idMap));
       }),
   };
 }
