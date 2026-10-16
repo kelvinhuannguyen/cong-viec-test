@@ -1,3 +1,21 @@
+import { BrowserRouter } from 'react-router';
+import { AppProviders } from './app/AppProviders';
+import { AppRoutes } from './app/AppRoutes';
+import { ErrorBoundary } from './app/ErrorBoundary';
+import { StorageGate } from './app/StorageGate';
+
 export function App() {
-  return <h1 className="p-8 text-2xl font-bold">Công Việc Của Tôi</h1>;
+  return (
+    <ErrorBoundary>
+      <StorageGate>
+        {(repositories) => (
+          <AppProviders repositories={repositories}>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </AppProviders>
+        )}
+      </StorageGate>
+    </ErrorBoundary>
+  );
 }

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
 import { App } from './App';
 
-it('hiển thị tên ứng dụng', () => {
+it('mở ứng dụng vào trang Công việc', async () => {
   render(<App />);
-  expect(screen.getByRole('heading', { name: 'Công Việc Của Tôi' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { level: 1, name: 'Công việc' })).toBeInTheDocument();
 });
