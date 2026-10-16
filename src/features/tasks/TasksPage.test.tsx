@@ -57,7 +57,8 @@ describe('trang Công việc', () => {
     const filters = await screen.findByRole('group', { name: 'Lọc theo trạng thái' });
     await waitFor(() => expect(within(filters).getByRole('button', { name: 'Tất cả 3' })).toBeInTheDocument());
     await user.click(within(filters).getByRole('button', { name: 'Đang làm 1' }));
-    expect(rowTitles()).toEqual(['Mua sữa']);
+    // Dòng bị lọc có hiệu ứng trượt ra nên chờ đến khi rời DOM hẳn.
+    await waitFor(() => expect(rowTitles()).toEqual(['Mua sữa']));
     expect(screen.getByTestId('location')).toHaveTextContent('/?status=in_progress');
   });
 
@@ -113,7 +114,7 @@ describe('trang Công việc', () => {
     await user.click(await screen.findByRole('button', { name: 'Thao tác khác cho "Mua sữa"' }));
     await user.click(screen.getByRole('menuitem', { name: 'Xoá' }));
     expect(await screen.findByText('Đã xoá "Mua sữa"')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mua sữa' })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Mua sữa' })).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Hoàn tác' }));
     expect(await screen.findByRole('button', { name: 'Mua sữa' })).toBeInTheDocument();
   });
