@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
+import { TaskDialogHost } from '../features/tasks/TaskDialogHost';
 import { useThemeEffect } from '../lib/theme';
 
 const NAV_ITEMS = [
@@ -55,6 +56,7 @@ export function Layout() {
       >
         <NavItems variant="bottom" />
       </nav>
+      <TaskDialogHost />
     </div>
   );
 }
