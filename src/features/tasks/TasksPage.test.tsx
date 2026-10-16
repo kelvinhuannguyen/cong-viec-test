@@ -108,4 +108,16 @@ describe('trang Công việc', () => {
     expect(screen.getByLabelText('Tìm công việc')).toHaveValue('');
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
   });
+
+  it('ô tìm kiếm đồng bộ với URL khi điều hướng bằng liên kết', async () => {
+    const user = userEvent.setup();
+    const repos = createTestRepositories();
+    await seed(repos);
+    renderApp(repos, '/?q=abc');
+    expect(await screen.findByLabelText('Tìm công việc')).toHaveValue('abc');
+    const nav = screen.getByRole('navigation', { name: 'Điều hướng chính' });
+    await user.click(within(nav).getByRole('link', { name: /Công việc/ }));
+    await waitFor(() => expect(rowTitles()).toHaveLength(3));
+    expect(screen.getByLabelText('Tìm công việc')).toHaveValue('');
+  });
 });

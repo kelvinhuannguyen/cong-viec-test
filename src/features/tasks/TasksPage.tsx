@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef } from 'react';
+import { useEffect, useId, useMemo, useRef } from 'react';
 import { btn, field } from '../../components/ui/styles';
 import { countByStatus, filterByStatus, searchTasks, sortTasks, type SortKey } from '../../domain/query';
 import { useLabels } from '../../hooks/useLabels';
@@ -28,6 +28,12 @@ export function TasksPage() {
   const searchRef = useRef<HTMLInputElement>(null);
   const now = useNow();
   useNewTaskShortcut(openNew);
+
+  // Đồng bộ ô tìm kiếm khi `q` đổi từ bên ngoài (nav, back/forward), trừ khi người dùng đang gõ.
+  useEffect(() => {
+    const input = searchRef.current;
+    if (input && document.activeElement !== input && input.value !== q) input.value = q;
+  }, [q]);
 
   const searched = useMemo(() => searchTasks(tasks, q), [tasks, q]);
   const counts = useMemo(() => countByStatus(searched), [searched]);
