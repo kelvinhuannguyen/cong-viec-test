@@ -16,6 +16,9 @@ describe('normalizeText', () => {
   it('bỏ dấu tiếng Việt, kể cả đ/Đ, và chữ hoa', () => {
     expect(normalizeText('  Đọc BÁO cáo  ')).toBe('doc bao cao');
   });
+  it('bỏ dấu kể cả khi đầu vào ở dạng tổ hợp (NFD)', () => {
+    expect(normalizeText('a\u0301')).toBe('a');
+  });
 });
 
 describe('searchTasks', () => {

@@ -5,7 +5,7 @@ import { backupFileName, createBackup, parseBackup, previewImport } from '../../
 import { useImportData } from '../../hooks/useImportData';
 import { useLabels } from '../../hooks/useLabels';
 import { useTasks } from '../../hooks/useTasks';
-import { SAVE_ERROR } from '../../lib/errors';
+import { LOAD_ERROR, SAVE_ERROR } from '../../lib/errors';
 import { formatDateTime } from '../../lib/format';
 import { PREF_KEYS, usePref } from '../../lib/prefs';
 
@@ -22,8 +22,12 @@ function readFileText(file: File): Promise<string> {
 }
 
 export function BackupSection() {
-  const { data: tasks = [] } = useTasks();
-  const { data: labels = [] } = useLabels();
+  const tasksQuery = useTasks();
+  const labelsQuery = useLabels();
+  const tasks = tasksQuery.data ?? [];
+  const labels = labelsQuery.data ?? [];
+  const ready = tasksQuery.isSuccess && labelsQuery.isSuccess;
+  const loadFailed = tasksQuery.isError || labelsQuery.isError;
   const importData = useImportData();
   const toast = useToast();
   const [lastBackupAt, setLastBackupAt] = usePref<string | null>(PREF_KEYS.lastBackupAt, null);
@@ -38,7 +42,7 @@ export function BackupSection() {
     link.href = url;
     link.download = backupFileName(now);
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     setLastBackupAt(backup.exportedAt);
   }
 
@@ -46,7 +50,14 @@ export function BackupSection() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    const parsed = parseBackup(await readFileText(file));
+    let text: string;
+    try {
+      text = await readFileText(file);
+    } catch {
+      setError('Không đọc được file');
+      return;
+    }
+    const parsed = parseBackup(text);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -76,14 +87,25 @@ export function BackupSection() {
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={btn.secondary} onClick={handleExport}>
+        <button type="button" className={btn.secondary} onClick={handleExport} disabled={!ready}>
           Xuất dữ liệu
         </button>
-        <label className={`${btn.secondary} cursor-pointer`}>
+        <label className={`${btn.secondary} ${ready ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
           Nhập dữ liệu
-          <input type="file" accept="application/json,.json" className="sr-only" onChange={handleImport} />
+          <input
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            disabled={!ready}
+            onChange={handleImport}
+          />
         </label>
       </div>
+      {loadFailed && (
+        <p role="alert" className="text-red-600">
+          {LOAD_ERROR}
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-red-600">
           {error}

@@ -36,7 +36,7 @@ export function writePref<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Bộ nhớ bị chặn: bỏ qua, tuỳ chọn chỉ có hiệu lực trong phiên này.
+    // Bộ nhớ bị chặn: tuỳ chọn không được lưu và giao diện sẽ không đổi theo.
   }
   window.dispatchEvent(new CustomEvent(PREF_EVENT, { detail: key }));
 }

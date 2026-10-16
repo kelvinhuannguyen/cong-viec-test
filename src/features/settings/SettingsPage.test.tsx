@@ -2,9 +2,34 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { createBackup } from '../../data/backup';
+import type { Repositories, TaskRepository } from '../../data/repository';
 import { createTestRepositories, renderApp } from '../../test/render';
 
+function withTasksNeverLoading(repos: Repositories, mode: 'pending' | 'error'): Repositories {
+  const tasks: TaskRepository = {
+    list: () => (mode === 'pending' ? new Promise(() => {}) : Promise.reject(new Error('boom'))),
+    create: (input) => repos.tasks.create(input),
+    update: (id, patch) => repos.tasks.update(id, patch),
+    remove: (id) => repos.tasks.remove(id),
+    restore: (task) => repos.tasks.restore(task),
+  };
+  return { ...repos, tasks };
+}
+
 describe('trang Cài đặt', () => {
+  it('vô hiệu hoá xuất/nhập khi danh sách việc chưa tải xong', async () => {
+    renderApp(withTasksNeverLoading(createTestRepositories(), 'pending'), '/cai-dat');
+    expect(await screen.findByRole('button', { name: 'Xuất dữ liệu' })).toBeDisabled();
+    expect(screen.getByLabelText('Nhập dữ liệu')).toBeDisabled();
+  });
+
+  it('báo lỗi và khoá xuất/nhập khi không đọc được dữ liệu', async () => {
+    renderApp(withTasksNeverLoading(createTestRepositories(), 'error'), '/cai-dat');
+    expect(await screen.findByText('Không đọc được dữ liệu. Hãy tải lại trang.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Xuất dữ liệu' })).toBeDisabled();
+    expect(screen.getByLabelText('Nhập dữ liệu')).toBeDisabled();
+  });
+
   it('thêm nhãn; trùng tên thì báo lỗi', async () => {
     const user = userEvent.setup();
     const repos = createTestRepositories();
@@ -49,7 +74,9 @@ describe('trang Cài đặt', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     renderApp(createTestRepositories(), '/cai-dat');
     expect(await screen.findByText('Chưa sao lưu lần nào.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Xuất dữ liệu' }));
+    const exportButton = screen.getByRole('button', { name: 'Xuất dữ liệu' });
+    await waitFor(() => expect(exportButton).toBeEnabled());
+    await user.click(exportButton);
     expect(click).toHaveBeenCalled();
     expect(await screen.findByText(/^Lần sao lưu gần nhất:/)).toBeInTheDocument();
   });
@@ -60,6 +87,7 @@ describe('trang Cài đặt', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     renderApp(repos, '/cai-dat');
     const input = await screen.findByLabelText('Nhập dữ liệu');
+    await waitFor(() => expect(input).toBeEnabled()); // chờ dữ liệu tải xong
 
     await user.upload(input, new File(['{oops'], 'sai.json', { type: 'application/json' }));
     expect(await screen.findByText('File không phải JSON hợp lệ')).toBeInTheDocument();

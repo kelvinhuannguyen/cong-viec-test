@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import type { Repositories } from '../../data/repository';
+import type { Repositories, TaskRepository } from '../../data/repository';
 import { createTestRepositories, renderApp } from '../../test/render';
 
 async function seed(repos: Repositories) {
@@ -18,6 +18,37 @@ function rowTitles(): string[] {
 }
 
 describe('trang Công việc', () => {
+  it('đọc dữ liệu lỗi thì báo lỗi, không hiện trạng thái trống', async () => {
+    const base = createTestRepositories();
+    const tasks: TaskRepository = {
+      list: () => Promise.reject(new Error('boom')),
+      create: (input) => base.tasks.create(input),
+      update: (id, patch) => base.tasks.update(id, patch),
+      remove: (id) => base.tasks.remove(id),
+      restore: (task) => base.tasks.restore(task),
+    };
+    renderApp({ ...base, tasks });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không đọc được dữ liệu. Hãy tải lại trang.');
+    expect(screen.getByRole('button', { name: 'Tải lại' })).toBeInTheDocument();
+    expect(screen.queryByText('Chưa có công việc nào')).not.toBeInTheDocument();
+  });
+
+  it('thêm nhanh thất bại thì giữ nguyên chữ đã gõ', async () => {
+    const user = userEvent.setup();
+    const base = createTestRepositories();
+    const tasks: TaskRepository = {
+      list: () => base.tasks.list(),
+      create: () => Promise.reject(new Error('boom')),
+      update: (id, patch) => base.tasks.update(id, patch),
+      remove: (id) => base.tasks.remove(id),
+      restore: (task) => base.tasks.restore(task),
+    };
+    renderApp({ ...base, tasks });
+    const input = await screen.findByLabelText('Thêm nhanh công việc');
+    await user.type(input, 'Việc hỏng{Enter}');
+    await waitFor(() => expect(input).toHaveValue('Việc hỏng'));
+  });
+
   it('lọc theo trạng thái, có đếm số và ghi lên URL', async () => {
     const user = userEvent.setup();
     const repos = createTestRepositories();

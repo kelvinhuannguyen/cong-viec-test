@@ -4,6 +4,7 @@ import { countByStatus, filterByStatus, searchTasks, sortTasks, type SortKey } f
 import { KANBAN_COLUMNS } from '../../domain/task';
 import { useLabels } from '../../hooks/useLabels';
 import { useTasks } from '../../hooks/useTasks';
+import { LOAD_ERROR } from '../../lib/errors';
 import { useNewTaskShortcut } from '../../lib/keyboard';
 import { PREF_KEYS, usePref } from '../../lib/prefs';
 import { useNow } from '../../lib/useNow';
@@ -24,7 +25,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 export function TasksPage() {
   const sortId = useId();
-  const { data: tasks = [], isPending } = useTasks();
+  const { data: tasks = [], isPending, isError } = useTasks();
   const { data: labels = [] } = useLabels();
   const { status, q, sort, setStatus, setQuery, setSort, clearFilters } = useTaskUrlState();
   const { openNew } = useTaskDialogParam();
@@ -108,7 +109,14 @@ export function TasksPage() {
 
       <QuickAdd />
 
-      {isPending ? (
+      {isError ? (
+        <div role="alert" className="space-y-3 rounded-2xl border border-red-300 p-6 text-center text-red-700 dark:border-red-800 dark:text-red-400">
+          <p>{LOAD_ERROR}</p>
+          <button type="button" className={btn.secondary} onClick={() => window.location.reload()}>
+            Tải lại
+          </button>
+        </div>
+      ) : isPending ? (
         <p className="text-slate-500">Đang tải…</p>
       ) : tasks.length === 0 ? (
         <EmptyState title="Chưa có công việc nào" actionLabel="Thêm việc đầu tiên" onAction={openNew} />

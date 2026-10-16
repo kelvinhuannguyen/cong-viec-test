@@ -104,7 +104,10 @@ export function LabelManager() {
           placeholder="Tên nhãn mới"
           className={`${field} w-44`}
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            setError('');
+          }}
         />
         <ColorSelect label="Màu nhãn mới" value={color} onChange={setColor} />
         <button type="submit" className={btn.secondary}>

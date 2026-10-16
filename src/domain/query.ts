@@ -9,7 +9,7 @@ const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 export function normalizeText(text: string): string {
   return text
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[đĐ]/g, 'd')
     .toLowerCase()
     .trim();

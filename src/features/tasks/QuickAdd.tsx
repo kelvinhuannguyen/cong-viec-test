@@ -17,8 +17,9 @@ export function QuickAdd() {
       return;
     }
     setError('');
-    createTask.mutate({ title: normalized });
-    setTitle('');
+    const submitted = title;
+    // Chỉ xoá khi ô vẫn giữ đúng chữ vừa gửi: gõ nhanh việc kế tiếp trong lúc chờ lưu thì không bị mất.
+    createTask.mutate({ title: normalized }, { onSuccess: () => setTitle((cur) => (cur === submitted ? '' : cur)) });
   }
 
   return (
@@ -28,7 +29,10 @@ export function QuickAdd() {
         placeholder="Thêm nhanh: gõ tên việc rồi nhấn Enter"
         className={`${field} w-full`}
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => {
+          setTitle(e.target.value);
+          setError('');
+        }}
       />
       {error && (
         <p role="alert" className="mt-1 text-sm text-red-600">

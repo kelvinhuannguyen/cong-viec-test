@@ -97,6 +97,7 @@ describe('normalizeTitle / normalizeLabelName', () => {
   it('so tên nhãn không phân biệt hoa thường', () => {
     expect(sameLabelName('Công việc', '  CÔNG VIỆC ')).toBe(true);
     expect(sameLabelName('Công việc', 'Cá nhân')).toBe(false);
+    expect(sameLabelName('Vi\u1EC7c', 'Vie\u0323\u0302c')).toBe(true); // dựng sẵn so với tổ hợp
   });
 });
 

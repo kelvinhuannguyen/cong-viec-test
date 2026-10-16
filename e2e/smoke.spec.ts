@@ -5,6 +5,7 @@ test('thêm việc, hoàn thành, báo cáo hiện đúng tỉ lệ', async ({ p
   const quickAdd = page.getByLabel('Thêm nhanh công việc');
   await quickAdd.fill('Viết báo cáo quý');
   await quickAdd.press('Enter');
+  // Dùng click() thay vì check(): checkbox có điều khiển, cập nhật lạc quan chỉ áp dụng sau `await cancelQueries`.
   await page.getByLabel('Đánh dấu "Viết báo cáo quý" đã xong').click();
   await page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: 'Báo cáo' }).click();
   await expect(page.getByRole('group', { name: 'Tỉ lệ hoàn thành' })).toContainText('100%');

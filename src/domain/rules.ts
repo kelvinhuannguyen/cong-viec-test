@@ -28,7 +28,7 @@ export function isDueSoon(task: DueFields, now: Date): boolean {
 }
 
 function normalizeText(value: string, max: number): string | null {
-  const trimmed = value.trim();
+  const trimmed = value.normalize('NFC').trim();
   return trimmed.length >= 1 && trimmed.length <= max ? trimmed : null;
 }
 
@@ -41,7 +41,7 @@ export function normalizeLabelName(name: string): string | null {
 }
 
 export function sameLabelName(a: string, b: string): boolean {
-  return a.trim().toLocaleLowerCase('vi') === b.trim().toLocaleLowerCase('vi');
+  return a.normalize('NFC').trim().toLocaleLowerCase('vi') === b.normalize('NFC').trim().toLocaleLowerCase('vi');
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');

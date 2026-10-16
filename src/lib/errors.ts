@@ -1,6 +1,7 @@
 import { RepositoryError } from '../data/repository';
 
 export const SAVE_ERROR = 'Không lưu được, thử lại';
+export const LOAD_ERROR = 'Không đọc được dữ liệu. Hãy tải lại trang.';
 
 export function errorMessage(error: unknown): string {
   if (error instanceof RepositoryError) {

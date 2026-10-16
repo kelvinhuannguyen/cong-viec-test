@@ -11,7 +11,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-20 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl bg-slate-900 p-3 text-sm text-white shadow-lg md:bottom-6"
+      className="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl bg-slate-900 p-3 text-sm text-white shadow-lg"
     >
       <span className="flex-1">Có phiên bản mới.</span>
       <button type="button" className="font-semibold text-blue-300 hover:underline" onClick={() => void updateServiceWorker(true)}>
