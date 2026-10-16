@@ -63,6 +63,9 @@ export function ResetPasswordPage({ auth, onDone }: { auth: AuthService; onDone:
             <button type="submit" className={`${btn.primary} h-11 w-full rounded-xl text-[15px]`} disabled={busy}>
               {busy ? 'Đang lưu…' : 'Lưu mật khẩu mới'}
             </button>
+            <button type="button" className={`${btn.ghost} h-10 w-full`} onClick={onDone} disabled={busy}>
+              Để sau, vào ứng dụng
+            </button>
           </form>
         </div>
       </main>

@@ -104,7 +104,7 @@ export function TaskForm({
         />
       </Field>
 
-      <Field id={`${id}-desc`} label="Mô tả">
+      <Field id={`${id}-desc`} label="Mô tả" error={errors.description}>
         <textarea
           id={`${id}-desc`}
           className={`${field} h-auto w-full resize-y py-2 leading-relaxed`}

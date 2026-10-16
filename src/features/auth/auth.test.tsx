@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AuthError } from '../../data/auth';
 import { createFakeAuth, testUser } from '../../test/fakeAuth';
 import { AuthGate } from './AuthGate';
-import { authErrorMessage, AUTH_FALLBACK } from './authErrors';
+import { authErrorMessage, AUTH_FALLBACK, consumeUrlAuthError } from './authErrors';
 import { LoginPage } from './LoginPage';
 
 describe('authErrorMessage', () => {
@@ -120,5 +120,22 @@ describe('AuthGate', () => {
     await user.click(screen.getByRole('button', { name: 'Lưu mật khẩu mới' }));
     expect(auth.updatePassword).toHaveBeenCalledWith('matkhaumoi1');
     expect(await screen.findByText('Trong app')).toBeInTheDocument();
+  });
+});
+
+describe('consumeUrlAuthError', () => {
+  it('đọc lỗi trên địa chỉ trang, dịch sang tiếng Việt và xoá khỏi địa chỉ', () => {
+    window.history.replaceState(null, '', '/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid');
+    expect(consumeUrlAuthError()).toBe('Link trong email đã hết hạn hoặc đã được dùng. Hãy yêu cầu link mới.');
+    expect(window.location.hash).toBe('');
+    expect(consumeUrlAuthError()).toBeNull();
+  });
+
+  it('LoginPage hiện lỗi từ link email ngay khi mở', () => {
+    window.history.replaceState(null, '', '/?error=access_denied&error_code=otp_expired');
+    const { auth } = createFakeAuth();
+    render(<LoginPage auth={auth} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Link trong email đã hết hạn');
+    expect(window.location.search).toBe('');
   });
 });

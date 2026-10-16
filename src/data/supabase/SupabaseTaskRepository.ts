@@ -6,6 +6,7 @@ import { newId } from '../../lib/id';
 import { RepositoryError, type TaskRepository } from '../repository';
 import { toRepositoryError } from './errors';
 import { TASK_COLUMNS, fromTaskRow, toTaskRow, type TaskRow } from './mappers';
+import { fetchAllPages } from './paginate';
 
 export class SupabaseTaskRepository implements TaskRepository {
   constructor(
@@ -14,9 +15,11 @@ export class SupabaseTaskRepository implements TaskRepository {
   ) {}
 
   async list(): Promise<Task[]> {
-    const { data, error } = await this.client.from('tasks').select(TASK_COLUMNS).order('created_at');
+    const { data, error } = await fetchAllPages<TaskRow>((from, to) =>
+      this.client.from('tasks').select(TASK_COLUMNS).order('created_at').order('id').range(from, to),
+    );
     if (error) throw toRepositoryError(error, 'task');
-    return (data as TaskRow[]).map(fromTaskRow);
+    return data.map(fromTaskRow);
   }
 
   /**

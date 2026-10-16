@@ -72,8 +72,9 @@ export function createSupabaseAuth(client: SupabaseClient): AuthService {
     },
 
     async signOut() {
+      // Mất mạng thì không báo được cho máy chủ: vẫn xoá phiên trên máy này để người dùng thoát ra.
       const { error } = await client.auth.signOut();
-      if (error) fail(error);
+      if (error) await client.auth.signOut({ scope: 'local' });
     },
   };
 }

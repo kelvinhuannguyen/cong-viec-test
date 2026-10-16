@@ -58,31 +58,37 @@ export function SettingsPage() {
             <AccountSection session={session} />
           </Section>
         )}
-        <Section index={0} title="Nhãn" icon={TagIcon} description="Nhóm công việc theo chủ đề như Công việc, Cá nhân, Học tập.">
+        <Section index={1} title="Nhãn" icon={TagIcon} description="Nhóm công việc theo chủ đề như Công việc, Cá nhân, Học tập.">
           <LabelManager />
         </Section>
         <Section
-          index={1}
+          index={2}
           title="Nhắc hạn chót"
           icon={BellIcon}
           description="Nhắc khi còn 1 giờ, khi vừa trễ hạn, và tóm tắt mỗi ngày."
         >
           <ReminderSection />
         </Section>
-        <Section index={2} title="Giao diện" icon={PaletteIcon} description="Chọn sáng, tối, hoặc đi theo cài đặt của máy.">
+        <Section index={3} title="Giao diện" icon={PaletteIcon} description="Chọn sáng, tối, hoặc đi theo cài đặt của máy.">
           <ThemeSection />
         </Section>
         <Section
-          index={3}
+          index={4}
           title="Sao lưu"
           icon={DatabaseIcon}
-          description="Dữ liệu chỉ nằm trong trình duyệt này. Xuất file định kỳ để không bị mất."
+          description={
+            session
+              ? 'Dữ liệu đã nằm trên tài khoản. Có thể xuất file để giữ một bản riêng hoặc chuyển sang tài khoản khác.'
+              : 'Dữ liệu chỉ nằm trong trình duyệt này. Xuất file định kỳ để không bị mất.'
+          }
         >
-          <BackupSection />
+          <BackupSection cloud={session !== null} />
         </Section>
-        <Section index={4} title="Lưu trữ" icon={HardDrivesIcon} description="Trạng thái bảo vệ dữ liệu của trình duyệt.">
-          <StorageStatus />
-        </Section>
+        {!session && (
+          <Section index={5} title="Lưu trữ" icon={HardDrivesIcon} description="Trạng thái bảo vệ dữ liệu của trình duyệt.">
+            <StorageStatus />
+          </Section>
+        )}
       </div>
     </div>
   );

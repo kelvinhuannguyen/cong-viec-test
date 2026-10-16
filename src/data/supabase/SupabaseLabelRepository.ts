@@ -6,14 +6,17 @@ import { stripUndefined } from '../../lib/object';
 import { RepositoryError, type LabelRepository } from '../repository';
 import { toRepositoryError } from './errors';
 import { LABEL_COLUMNS, fromLabelRow, type LabelRow } from './mappers';
+import { fetchAllPages } from './paginate';
 
 export class SupabaseLabelRepository implements LabelRepository {
   constructor(private readonly client: SupabaseClient) {}
 
   async list(): Promise<Label[]> {
-    const { data, error } = await this.client.from('labels').select(LABEL_COLUMNS).order('created_at');
+    const { data, error } = await fetchAllPages<LabelRow>((from, to) =>
+      this.client.from('labels').select(LABEL_COLUMNS).order('created_at').order('id').range(from, to),
+    );
     if (error) throw toRepositoryError(error, 'label');
-    return (data as LabelRow[]).map(fromLabelRow);
+    return data.map(fromLabelRow);
   }
 
   /**

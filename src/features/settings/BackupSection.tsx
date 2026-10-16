@@ -22,7 +22,8 @@ function readFileText(file: File): Promise<string> {
   });
 }
 
-export function BackupSection() {
+/** cloud: dữ liệu đã nằm trên Supabase nên không cần nhắc sao lưu hằng tuần. */
+export function BackupSection({ cloud = false }: { cloud?: boolean }) {
   const tasksQuery = useTasks();
   const labelsQuery = useLabels();
   const tasks = tasksQuery.data ?? [];
@@ -81,7 +82,7 @@ export function BackupSection() {
     }
   }
 
-  const stale = !lastBackupAt || Date.now() - Date.parse(lastBackupAt) > BACKUP_REMINDER_MS;
+  const stale = !cloud && (!lastBackupAt || Date.now() - Date.parse(lastBackupAt) > BACKUP_REMINDER_MS);
 
   return (
     <div className="space-y-4 text-sm">

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState, type FormEvent } from 'react';
 import { btn, spring } from '../../components/ui/styles';
 import type { AuthService } from '../../data/auth';
-import { authErrorMessage } from './authErrors';
+import { authErrorMessage, consumeUrlAuthError } from './authErrors';
 import { AuthField, AuthShowcase, GoogleLogo, Notice } from './authUi';
 
 type View = 'signIn' | 'signUp' | 'forgot';
@@ -21,7 +21,8 @@ export function LoginPage({ auth }: { auth: AuthService }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState<'form' | 'google' | null>(null);
-  const [error, setError] = useState('');
+  // Link email hết hạn / huỷ đăng nhập Google: Supabase đưa lỗi về trên địa chỉ trang.
+  const [error, setError] = useState(() => consumeUrlAuthError() ?? '');
   const [notice, setNotice] = useState('');
 
   function go(next: View) {

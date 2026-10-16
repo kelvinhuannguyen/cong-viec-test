@@ -31,7 +31,7 @@ export function OfflineBanner() {
           className="mb-6 flex items-center gap-2.5 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
         >
           <WifiSlashIcon className="size-4 shrink-0 text-amber-500" aria-hidden="true" />
-          Đang ngoại tuyến. Thay đổi sẽ được gửi khi có mạng trở lại.
+          Đang ngoại tuyến. Thay đổi chỉ được lưu khi có mạng trở lại — đừng đóng ứng dụng trước lúc đó.
         </motion.p>
       )}
     </AnimatePresence>

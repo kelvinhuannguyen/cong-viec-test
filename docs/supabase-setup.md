@@ -43,6 +43,8 @@ Thiếu bước này thì link trong email xác nhận / đặt lại mật kh�
 Dashboard → **Authentication** → **Sign In / Providers** → **Email**: đã **bật** sẵn.
 
 - **Confirm email** đang bật: tạo tài khoản xong phải bấm link trong email rồi mới đăng nhập được.
+- **Minimum password length**: đặt **8** cho khớp với app (mặc định của Supabase là 6).
+  Mục này nằm ở **Authentication** → **Sign In / Providers** → **Email** (hoặc **Authentication** → **Policies / Passwords**).
 - Email mặc định của Supabase chỉ gửi được vài thư mỗi giờ. Khi dùng thật nên cấu hình SMTP riêng
   (**Authentication** → **Emails** → **SMTP Settings**).
 

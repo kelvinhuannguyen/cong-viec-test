@@ -17,7 +17,7 @@ export type FormErrors = Partial<Record<keyof TaskFormValues, string>>;
 const taskFormSchema = z
   .object({
     title: z.string().trim().min(1, 'Vui lòng nhập tên công việc').max(200, 'Tên tối đa 200 ký tự'),
-    description: z.string(),
+    description: z.string().max(10000, 'Mô tả tối đa 10.000 ký tự'),
     status: z.enum(TASK_STATUSES),
     priority: z.enum(PRIORITIES),
     dueDate: z.string(),

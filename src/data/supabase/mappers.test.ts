@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeTask } from '../../test/factories';
 import { getBackend } from '../index';
 import { RepositoryError } from '../repository';
+import { adoptForeignIds } from './createSupabaseRepositories';
 import { toRepositoryError } from './errors';
 import { fromLabelRow, fromTaskRow, toTaskRow, type TaskRow } from './mappers';
 
@@ -71,5 +72,30 @@ describe('getBackend', () => {
     );
     expect(getBackend({ VITE_SUPABASE_URL: 'https://x.supabase.co', VITE_SUPABASE_PUBLISHABLE_KEY: ' ' })).toBe('local');
     expect(getBackend({})).toBe('local');
+  });
+});
+
+describe('adoptForeignIds', () => {
+  it('giữ id của mình, đổi id của tài khoản khác và đổi labelIds theo', () => {
+    const mine = makeTask({ id: 'cua-toi', labelIds: ['nhan-la'] });
+    const foreign = makeTask({ id: 'cua-nguoi-khac', labelIds: ['nhan-cua-toi', 'nhan-la'] });
+    let n = 0;
+    const result = adoptForeignIds(
+      {
+        tasks: [mine, foreign],
+        labels: [
+          { id: 'nhan-cua-toi', name: 'A', color: 'blue' },
+          { id: 'nhan-la', name: 'B', color: 'red' },
+        ],
+      },
+      new Set(['cua-toi']),
+      new Set(['nhan-cua-toi']),
+      () => `moi-${++n}`,
+    );
+    expect(result.labels.map((l) => l.id)).toEqual(['nhan-cua-toi', 'moi-1']);
+    expect(result.tasks.map((t) => [t.id, t.labelIds])).toEqual([
+      ['cua-toi', ['moi-1']],
+      ['moi-2', ['nhan-cua-toi', 'moi-1']],
+    ]);
   });
 });
