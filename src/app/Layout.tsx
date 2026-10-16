@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router';
 import { TaskDialogHost } from '../features/tasks/TaskDialogHost';
 import { useThemeEffect } from '../lib/theme';
 import { ReminderRunner } from '../notifications/ReminderRunner';
+import { UpdatePrompt } from '../pwa/UpdatePrompt';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Công việc', icon: '☑️', end: true },
@@ -59,6 +60,7 @@ export function Layout() {
       </nav>
       <TaskDialogHost />
       <ReminderRunner />
+      <UpdatePrompt />
     </div>
   );
 }
