@@ -1,11 +1,14 @@
 import { useEffect, useId, useMemo, useRef } from 'react';
 import { btn, field } from '../../components/ui/styles';
 import { countByStatus, filterByStatus, searchTasks, sortTasks, type SortKey } from '../../domain/query';
+import { KANBAN_COLUMNS } from '../../domain/task';
 import { useLabels } from '../../hooks/useLabels';
 import { useTasks } from '../../hooks/useTasks';
 import { useNewTaskShortcut } from '../../lib/keyboard';
+import { PREF_KEYS, usePref } from '../../lib/prefs';
 import { useNow } from '../../lib/useNow';
 import { EmptyState } from './EmptyState';
+import { KanbanBoard } from './KanbanBoard';
 import { QuickAdd } from './QuickAdd';
 import { StatusFilterBar } from './StatusFilterBar';
 import { TaskRow } from './TaskRow';
@@ -24,6 +27,8 @@ export function TasksPage() {
   const { data: labels = [] } = useLabels();
   const { status, q, sort, setStatus, setQuery, setSort, clearFilters } = useTaskUrlState();
   const { openNew } = useTaskDialogParam();
+  const [storedView, setView] = usePref<string>(PREF_KEYS.view, 'list');
+  const view: 'list' | 'kanban' = storedView === 'kanban' ? 'kanban' : 'list';
   // Ô tìm kiếm không điều khiển (uncontrolled) để gõ nhanh không mất ký tự khi URL cập nhật trễ.
   const searchRef = useRef<HTMLInputElement>(null);
   const now = useNow();
@@ -39,6 +44,7 @@ export function TasksPage() {
   const counts = useMemo(() => countByStatus(searched), [searched]);
   const visible = useMemo(() => sortTasks(filterByStatus(searched, status), sort), [searched, status, sort]);
   const labelsById = useMemo(() => new Map(labels.map((l) => [l.id, l])), [labels]);
+  const noMatches = view === 'list' ? visible.length === 0 : searched.length === 0;
 
   function handleClear() {
     clearFilters();
@@ -65,20 +71,37 @@ export function TasksPage() {
 
       <StatusFilterBar value={status} counts={counts} onChange={setStatus} />
 
-      <div className="flex items-center gap-2 text-sm">
-        <label htmlFor={sortId}>Sắp xếp</label>
-        <select
-          id={sortId}
-          className={`${field} w-auto`}
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-        >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <div role="group" aria-label="Chế độ xem" className="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+          {(['list', 'kanban'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={view === mode}
+              onClick={() => setView(mode)}
+              className={`px-3 py-1.5 ${view === mode ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800'}`}
+            >
+              {mode === 'list' ? 'Danh sách' : 'Kanban'}
+            </button>
           ))}
-        </select>
+        </div>
+        {view === 'list' && (
+          <>
+            <label htmlFor={sortId}>Sắp xếp</label>
+            <select
+              id={sortId}
+              className={`${field} w-auto`}
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
       </div>
 
       <QuickAdd />
@@ -87,8 +110,16 @@ export function TasksPage() {
         <p className="text-slate-500">Đang tải…</p>
       ) : tasks.length === 0 ? (
         <EmptyState title="Chưa có công việc nào" actionLabel="Thêm việc đầu tiên" onAction={openNew} />
-      ) : visible.length === 0 ? (
+      ) : noMatches ? (
         <EmptyState title="Không có việc nào khớp bộ lọc" actionLabel="Xoá bộ lọc" onAction={handleClear} />
+      ) : view === 'kanban' ? (
+        <KanbanBoard
+          allTasks={tasks}
+          visibleTasks={searched}
+          statuses={status === 'all' ? KANBAN_COLUMNS : [status]}
+          labelsById={labelsById}
+          now={now}
+        />
       ) : (
         <ul aria-label="Danh sách công việc" className="space-y-2">
           {visible.map((task) => (
