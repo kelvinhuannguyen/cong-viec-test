@@ -1,8 +1,8 @@
 import { topPosition } from '../../domain/kanban';
-import { applyStatusChange, normalizeTitle } from '../../domain/rules';
+import { normalizeTitle } from '../../domain/rules';
 import type { NewTask, Task, TaskPatch, TaskUpdate } from '../../domain/task';
+import { applyTaskPatch, columnChange } from '../../domain/taskPatch';
 import { newId } from '../../lib/id';
-import { stripUndefined } from '../../lib/object';
 import { RepositoryError, type TaskRepository } from '../repository';
 import type { AppDatabase } from './db';
 
@@ -59,21 +59,10 @@ export class DexieTaskRepository implements TaskRepository {
   private async applyUpdate(id: string, patch: TaskPatch, now: Date): Promise<Task> {
     const current = await this.db.tasks.get(id);
     if (!current) throw new RepositoryError('NOT_FOUND');
-    const clean = stripUndefined(patch);
-    const next: Task = { ...current, ...clean, updatedAt: now.toISOString() };
-
-    if (clean.title !== undefined) {
-      const title = normalizeTitle(clean.title);
-      if (!title) throw new RepositoryError('INVALID_TITLE');
-      next.title = title;
-    }
-    if (clean.status !== undefined) {
-      Object.assign(next, applyStatusChange(current, clean.status, now));
-      if (clean.status !== current.status && clean.position === undefined) {
-        const siblings = await this.db.tasks.where('status').equals(clean.status).toArray();
-        next.position = topPosition(siblings);
-      }
-    }
+    const target = columnChange(current, patch);
+    const top = target ? topPosition(await this.db.tasks.where('status').equals(target).toArray()) : undefined;
+    const next = applyTaskPatch(current, patch, now, top);
+    if (!next) throw new RepositoryError('INVALID_TITLE');
     await this.db.tasks.put(next);
     return next;
   }

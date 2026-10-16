@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeLabel, makeTask } from '../test/factories';
-import { planLabelImport, remapTaskLabels } from './importMerge';
+import { planLabelImport, reassignIds, remapTaskLabels } from './importMerge';
 
 describe('planLabelImport', () => {
   it('thêm mới, ghi đè theo id, gộp nhãn trùng tên khác id', () => {
@@ -45,4 +45,15 @@ it('remapTaskLabels đổi id và bỏ nhãn lặp', () => {
   const [remapped] = remapTaskLabels([task], new Map([['x', 'y']]));
   expect(remapped.labelIds).toEqual(['y', 'z']);
   expect(remapTaskLabels([task], new Map())).toEqual([task]);
+});
+
+describe('reassignIds', () => {
+  it('đổi id việc và nhãn, giữ liên kết nhãn, bỏ nhãn không tồn tại', () => {
+    const label = makeLabel({ id: 'l-cu' });
+    const task = makeTask({ id: 't-cu', labelIds: ['l-cu', 'mat-tich'] });
+    let n = 0;
+    const result = reassignIds({ tasks: [task], labels: [label] }, () => `moi-${++n}`);
+    expect(result.labels).toEqual([{ ...label, id: 'moi-1' }]);
+    expect(result.tasks).toEqual([{ ...task, id: 'moi-2', labelIds: ['moi-1'] }]);
+  });
 });

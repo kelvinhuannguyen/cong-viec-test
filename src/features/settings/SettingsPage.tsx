@@ -1,4 +1,6 @@
-import { BellIcon, DatabaseIcon, HardDrivesIcon, PaletteIcon, TagIcon, type Icon } from '@phosphor-icons/react';
+import { BellIcon, DatabaseIcon, HardDrivesIcon, PaletteIcon, TagIcon, UserCircleIcon, type Icon } from '@phosphor-icons/react';
+import { useSession } from '../auth/SessionContext';
+import { AccountSection } from './AccountSection';
 import { motion } from 'motion/react';
 import { useId, type ReactNode } from 'react';
 import { softSpring } from '../../components/ui/styles';
@@ -43,6 +45,7 @@ function Section({
 }
 
 export function SettingsPage() {
+  const session = useSession();
   return (
     <div className="mx-auto max-w-4xl">
       <header className="mb-10">
@@ -50,6 +53,11 @@ export function SettingsPage() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tighter md:text-4xl">Cài đặt</h1>
       </header>
       <div className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
+        {session && (
+          <Section index={0} title="Tài khoản" icon={UserCircleIcon} description="Dữ liệu được lưu trên tài khoản này.">
+            <AccountSection session={session} />
+          </Section>
+        )}
         <Section index={0} title="Nhãn" icon={TagIcon} description="Nhóm công việc theo chủ đề như Công việc, Cá nhân, Học tập.">
           <LabelManager />
         </Section>

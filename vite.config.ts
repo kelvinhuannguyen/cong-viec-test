@@ -2,8 +2,11 @@
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+// Test luôn chạy chế độ lưu trên máy; bộ test hợp đồng Supabase đọc URL/key/tài khoản test riêng.
+const fileEnv = loadEnv('test', process.cwd(), '');
 
 export default defineConfig({
   plugins: [
@@ -36,6 +39,14 @@ export default defineConfig({
   ],
   test: {
     environment: 'jsdom',
+    env: {
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_PUBLISHABLE_KEY: '',
+      SUPABASE_TEST_URL: fileEnv.VITE_SUPABASE_URL ?? '',
+      SUPABASE_TEST_KEY: fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY ?? '',
+      SUPABASE_TEST_EMAIL: fileEnv.SUPABASE_TEST_EMAIL ?? '',
+      SUPABASE_TEST_PASSWORD: fileEnv.SUPABASE_TEST_PASSWORD ?? '',
+    },
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     alias: {

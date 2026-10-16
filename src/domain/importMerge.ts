@@ -41,3 +41,23 @@ export function remapTaskLabels(tasks: Task[], idMap: Map<string, string>): Task
     labelIds: [...new Set(task.labelIds.map((id) => idMap.get(id) ?? id))],
   }));
 }
+
+/**
+ * Gán id mới cho mọi việc và nhãn (giữ liên kết nhãn của việc). Dùng khi đưa dữ liệu trên máy lên
+ * tài khoản: id cũ có thể đã được tài khoản khác dùng khi đưa lên từ cùng máy này.
+ */
+export function reassignIds(
+  data: { tasks: Task[]; labels: Label[] },
+  makeId: () => string,
+): { tasks: Task[]; labels: Label[] } {
+  const labelIds = new Map(data.labels.map((l) => [l.id, makeId()]));
+  return {
+    labels: data.labels.map((l) => ({ ...l, id: labelIds.get(l.id)! })),
+    tasks: data.tasks.map((t) => ({
+      ...t,
+      id: makeId(),
+      // Bỏ id nhãn không còn tồn tại trên máy.
+      labelIds: t.labelIds.flatMap((id) => (labelIds.has(id) ? [labelIds.get(id)!] : [])),
+    })),
+  };
+}

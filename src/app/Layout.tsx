@@ -4,12 +4,15 @@ import { vi } from 'date-fns/locale';
 import { motion, MotionConfig } from 'motion/react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { kbd, softSpring, spring } from '../components/ui/styles';
+import { useSession } from '../features/auth/SessionContext';
+import { UserMenu } from '../features/auth/UserMenu';
 import { TaskDialogHost } from '../features/tasks/TaskDialogHost';
 import { useTasks } from '../hooks/useTasks';
 import { useThemeEffect } from '../lib/theme';
 import { useNow } from '../lib/useNow';
 import { ReminderRunner } from '../notifications/ReminderRunner';
 import { UpdatePrompt } from '../pwa/UpdatePrompt';
+import { OfflineBanner } from './OfflineBanner';
 
 const NAV_ITEMS: { to: string; label: string; icon: Icon; end: boolean }[] = [
   { to: '/', label: 'Công việc', icon: ListChecksIcon, end: true },
@@ -124,6 +127,7 @@ function TodayPanel() {
 export function Layout() {
   useThemeEffect();
   const location = useLocation();
+  const session = useSession();
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-dvh md:grid md:grid-cols-[256px_minmax(0,1fr)]">
@@ -133,8 +137,9 @@ export function Layout() {
             <p className="text-[15px] font-semibold tracking-tight">Công Việc Của Tôi</p>
           </div>
           <SideNav />
-          <div className="mt-auto">
+          <div className="mt-auto space-y-3">
             <TodayPanel />
+            <UserMenu />
           </div>
         </aside>
 
@@ -143,6 +148,7 @@ export function Layout() {
             <BrandMark />
             <p className="text-[15px] font-semibold tracking-tight">Công Việc Của Tôi</p>
           </div>
+          {session && <OfflineBanner />}
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
