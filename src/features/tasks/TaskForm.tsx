@@ -10,7 +10,7 @@ import {
   type TaskInput,
   type TaskStatus,
 } from '../../domain/task';
-import { validateTaskForm, type FormErrors, type TaskFormValues } from './taskForm';
+import { validateTaskForm, type FormErrors, type TaskFormValues } from './taskFormModel';
 
 export function TaskForm({
   initial,

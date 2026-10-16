@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { Dialog } from '../../components/ui/Dialog';
 import { useLabels } from '../../hooks/useLabels';
 import { useCreateTask, useTasks, useUpdateTasks } from '../../hooks/useTasks';
-import { toFormValues } from './taskForm';
-import { TaskForm } from './TaskForm.tsx';
+import { toFormValues } from './taskFormModel';
+import { TaskForm } from './TaskForm';
 import { NEW_TASK, useTaskDialogParam } from './useTaskDialogParam';
 
 export function TaskDialogHost() {

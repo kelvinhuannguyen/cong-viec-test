@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toDueAt } from '../../domain/rules';
 import { makeTask } from '../../test/factories';
-import { toFormValues, validateTaskForm } from './taskForm';
+import { toFormValues, validateTaskForm } from './taskFormModel';
 
 describe('taskForm', () => {
   it('giá trị mặc định cho việc mới', () => {
