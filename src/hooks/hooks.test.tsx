@@ -1,21 +1,16 @@
 import { act, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
-import type { Repositories, TaskRepository } from '../data/repository';
+import { describe, expect, it, vi } from 'vitest';
+import type { Repositories } from '../data/repository';
+import type { TaskUpdate } from '../domain/task';
 import { SAVE_ERROR } from '../lib/errors';
-import { createTestRepositories, createWrapper } from '../test/render';
+import { createTestRepositories, createWrapper, withTasks } from '../test/render';
 import { useDeleteLabel, useLabels } from './useLabels';
 import { useCreateTask, useDeleteTask, useTasks, useUpdateTasks } from './useTasks';
 
 function withFailingUpdate(repos: Repositories): Repositories {
-  const tasks: TaskRepository = {
-    list: () => repos.tasks.list(),
-    create: (input) => repos.tasks.create(input),
-    update: () => Promise.reject(new Error('boom')),
-    remove: (id) => repos.tasks.remove(id),
-    restore: (task) => repos.tasks.restore(task),
-  };
-  return { ...repos, tasks };
+  const fail = () => Promise.reject(new Error('boom'));
+  return withTasks(repos, { update: fail, updateMany: fail });
 }
 
 describe('task hooks', () => {
@@ -41,6 +36,27 @@ describe('task hooks', () => {
     const [saved] = await repos.tasks.list();
     expect(saved.status).toBe('done');
     expect(saved.completedAt).not.toBeNull();
+  });
+
+  it('useUpdateTasks lưu nhiều việc bằng một lần updateMany', async () => {
+    const base = createTestRepositories();
+    const a = await base.tasks.create({ title: 'A' });
+    const b = await base.tasks.create({ title: 'B' });
+    const updateMany = vi.fn((updates: TaskUpdate[]) => base.tasks.updateMany(updates));
+    const update = vi.fn();
+    const repos = withTasks(base, { updateMany, update });
+    const { result } = renderHook(() => ({ list: useTasks(), update: useUpdateTasks() }), {
+      wrapper: createWrapper(repos),
+    });
+    await waitFor(() => expect(result.current.list.data).toHaveLength(2));
+    const updates = [
+      { id: a.id, patch: { position: 5 } },
+      { id: b.id, patch: { position: 6 } },
+    ];
+    await act(() => result.current.update.mutateAsync(updates));
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany).toHaveBeenCalledWith(updates);
+    expect(update).not.toHaveBeenCalled();
   });
 
   it('lưu thất bại thì khôi phục và báo lỗi', async () => {

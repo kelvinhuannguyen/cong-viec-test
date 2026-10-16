@@ -3,11 +3,28 @@ import { motion } from 'motion/react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { spring } from '../components/ui/styles';
 
+export const SW_UPDATE_INTERVAL_MS = 60 * 60 * 1000;
+
+/**
+ * Ứng dụng đã cài có thể mở nhiều ngày liền mà không tải lại trang, nên trình duyệt ít khi tự kiểm tra
+ * bản mới: hỏi máy chủ định kỳ. Bỏ qua khi mất mạng hoặc đang cài dở một bản.
+ */
+export function scheduleUpdateChecks(registration: ServiceWorkerRegistration, intervalMs = SW_UPDATE_INTERVAL_MS) {
+  return setInterval(() => {
+    if (!navigator.onLine || registration.installing) return;
+    registration.update().catch(() => undefined);
+  }, intervalMs);
+}
+
 export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegisteredSW: (_swUrl, registration) => {
+      if (registration) scheduleUpdateChecks(registration);
+    },
+  });
 
   if (!needRefresh) return null;
 

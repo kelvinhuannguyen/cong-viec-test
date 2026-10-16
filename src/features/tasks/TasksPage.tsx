@@ -57,7 +57,10 @@ function ProgressLine({ done, total }: { done: number; total: number }) {
 
 export function TasksPage() {
   const sortId = useId();
-  const { data: tasks = [], isPending, isError } = useTasks();
+  const tasksQuery = useTasks();
+  const tasks = tasksQuery.data ?? [];
+  // Lỗi khi đọc lại ngầm (đã có dữ liệu) thì vẫn hiện danh sách cũ thay vì che bằng thông báo lỗi.
+  const loadFailed = tasksQuery.isError && tasksQuery.data === undefined;
   const { data: labels = [] } = useLabels();
   const { status, q, sort, setStatus, setQuery, setSort, clearFilters } = useTaskUrlState();
   const { openNew } = useTaskDialogParam();
@@ -180,7 +183,7 @@ export function TasksPage() {
         </div>
       </div>
 
-      {isError ? (
+      {loadFailed ? (
         <div
           role="alert"
           className="flex flex-col items-start gap-4 rounded-3xl border border-rose-200 bg-rose-50/60 p-6 sm:flex-row sm:items-center dark:border-rose-500/20 dark:bg-rose-500/5"
@@ -192,7 +195,7 @@ export function TasksPage() {
             Tải lại
           </button>
         </div>
-      ) : isPending ? (
+      ) : tasksQuery.isPending ? (
         <TaskListSkeleton />
       ) : tasks.length === 0 ? (
         <EmptyState

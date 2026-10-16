@@ -28,3 +28,23 @@ test('tải lại trang vẫn giữ dữ liệu và bộ lọc trên URL', async
   await expect(page.getByRole('button', { name: 'Mua sữa', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Gọi điện cho mẹ', exact: true })).toHaveCount(0);
 });
+
+test('nút Back đóng hộp thoại thay vì rời trang', async ({ page }) => {
+  await page.goto('/bao-cao');
+  await page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: 'Công việc' }).click();
+  await page.getByRole('button', { name: 'Thêm việc', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Thêm công việc' })).toBeVisible();
+  await expect(page).toHaveURL(/\?task=new$/);
+
+  await page.goBack();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/$/);
+
+  // Đóng bằng Esc rồi Back thì về trang trước đó, không mở lại hộp thoại.
+  await page.getByRole('button', { name: 'Thêm việc', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Thêm công việc' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/bao-cao$/);
+});

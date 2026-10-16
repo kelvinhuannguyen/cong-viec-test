@@ -35,7 +35,7 @@ export function useUpdateTasks() {
   const queryClient = useQueryClient();
   const toast = useToast();
   return useMutation<Task[], Error, TaskUpdate[], { previous?: Task[] }>({
-    mutationFn: (updates) => Promise.all(updates.map((u) => tasks.update(u.id, u.patch))),
+    mutationFn: (updates) => tasks.updateMany(updates),
     onMutate: async (updates) => {
       await queryClient.cancelQueries({ queryKey: taskKeys.all });
       const previous = queryClient.getQueryData<Task[]>(taskKeys.all);

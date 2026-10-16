@@ -1,9 +1,11 @@
-import type { Label, LabelPatch, NewLabel, NewTask, Task, TaskPatch } from '../domain/task';
+import type { Label, LabelPatch, NewLabel, NewTask, Task, TaskPatch, TaskUpdate } from '../domain/task';
 
 export interface TaskRepository {
   list(): Promise<Task[]>;
   create(input: NewTask): Promise<Task>;
   update(id: string, patch: TaskPatch): Promise<Task>;
+  /** Cập nhật nhiều việc trong một giao dịch: một việc lỗi thì không việc nào được lưu. */
+  updateMany(updates: TaskUpdate[]): Promise<Task[]>;
   remove(id: string): Promise<void>;
   /** Ghi lại nguyên vẹn một việc đã xoá (phục vụ "Hoàn tác"). */
   restore(task: Task): Promise<void>;
@@ -20,7 +22,10 @@ export interface LabelRepository {
 export interface Repositories {
   tasks: TaskRepository;
   labels: LabelRepository;
-  /** Gộp theo id (trùng thì ghi đè) trong một giao dịch. */
+  /**
+   * Gộp theo id (trùng thì ghi đè) trong một giao dịch. Nhãn trùng tên (không phân biệt hoa thường)
+   * với một nhãn đã có thì dùng nhãn đã có, các việc nhập vào được đổi sang id đó (xem planLabelImport).
+   */
   importData(data: { tasks: Task[]; labels: Label[] }): Promise<void>;
 }
 

@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import type { Repositories, TaskRepository } from '../../data/repository';
-import { createTestRepositories, renderApp } from '../../test/render';
+import type { Repositories } from '../../data/repository';
+import { createTestRepositories, renderApp, withTasks } from '../../test/render';
 
 async function seed(repos: Repositories) {
   await repos.tasks.create({ title: 'Viết báo cáo quý', priority: 'low' });
@@ -19,31 +19,32 @@ function rowTitles(): string[] {
 
 describe('trang Công việc', () => {
   it('đọc dữ liệu lỗi thì báo lỗi, không hiện trạng thái trống', async () => {
-    const base = createTestRepositories();
-    const tasks: TaskRepository = {
-      list: () => Promise.reject(new Error('boom')),
-      create: (input) => base.tasks.create(input),
-      update: (id, patch) => base.tasks.update(id, patch),
-      remove: (id) => base.tasks.remove(id),
-      restore: (task) => base.tasks.restore(task),
-    };
-    renderApp({ ...base, tasks });
+    renderApp(withTasks(createTestRepositories(), { list: () => Promise.reject(new Error('boom')) }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Không đọc được dữ liệu. Hãy tải lại trang.');
     expect(screen.getByRole('button', { name: 'Tải lại' })).toBeInTheDocument();
     expect(screen.queryByText('Chưa có công việc nào')).not.toBeInTheDocument();
   });
 
-  it('thêm nhanh thất bại thì giữ nguyên chữ đã gõ', async () => {
+  it('đọc lại ngầm bị lỗi thì vẫn giữ danh sách đã tải, không báo lỗi', async () => {
     const user = userEvent.setup();
     const base = createTestRepositories();
-    const tasks: TaskRepository = {
-      list: () => base.tasks.list(),
-      create: () => Promise.reject(new Error('boom')),
-      update: (id, patch) => base.tasks.update(id, patch),
-      remove: (id) => base.tasks.remove(id),
-      restore: (task) => base.tasks.restore(task),
-    };
-    renderApp({ ...base, tasks });
+    await base.tasks.create({ title: 'Mua sữa' });
+    let calls = 0;
+    const repos = withTasks(base, {
+      list: () => (++calls === 1 ? base.tasks.list() : Promise.reject(new Error('boom'))),
+    });
+    renderApp(repos);
+    expect(await screen.findByRole('button', { name: 'Mua sữa' })).toBeInTheDocument();
+    // Thêm việc làm danh sách được đọc lại, lần đọc này lỗi.
+    await user.type(screen.getByLabelText('Thêm nhanh công việc'), 'Gọi điện{Enter}');
+    await waitFor(() => expect(calls).toBe(2));
+    expect(screen.getByRole('button', { name: 'Mua sữa' })).toBeInTheDocument();
+    expect(screen.queryByText('Không đọc được dữ liệu. Hãy tải lại trang.')).not.toBeInTheDocument();
+  });
+
+  it('thêm nhanh thất bại thì giữ nguyên chữ đã gõ', async () => {
+    const user = userEvent.setup();
+    renderApp(withTasks(createTestRepositories(), { create: () => Promise.reject(new Error('boom')) }));
     const input = await screen.findByLabelText('Thêm nhanh công việc');
     await user.type(input, 'Việc hỏng{Enter}');
     await waitFor(() => expect(input).toHaveValue('Việc hỏng'));
